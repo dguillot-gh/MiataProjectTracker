@@ -1,0 +1,39 @@
+﻿@page "/parts"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MiataProjectTracker.Models
+@using MiataProjectTracker.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="parts/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Parts">
+    <PropertyColumn Property="parts => parts.PartName" />
+    <PropertyColumn Property="parts => parts.PartNumber" />
+    <PropertyColumn Property="parts => parts.PartStatus" />
+    <PropertyColumn Property="parts => parts.PartCost" />
+
+    <TemplateColumn Context="parts">
+        <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
+        <a href="@($"parts/details?id={parts.Id}")">Details</a> |
+        <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private MiataProjectTrackerContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

@@ -1,0 +1,67 @@
+﻿@page "/parts/delete"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Parts</h2>
+    <hr />
+    @if (parts is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">PartName</dt>
+            <dd class="col-sm-10">@parts.PartName</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">PartNumber</dt>
+            <dd class="col-sm-10">@parts.PartNumber</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">PartStatus</dt>
+            <dd class="col-sm-10">@parts.PartStatus</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">PartCost</dt>
+            <dd class="col-sm-10">@parts.PartCost</dd>
+        </dl>
+        <EditForm method="post" Model="parts" OnValidSubmit="DeleteParts" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(parts is null)">Delete</button> |
+            <a href="/parts">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Parts? parts;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        parts = await context.Parts.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (parts is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteParts()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Parts.Remove(parts!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/parts");
+    }
+}

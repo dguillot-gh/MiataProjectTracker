@@ -1,0 +1,59 @@
+﻿@page "/parts/create"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Parts</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Parts" OnValidSubmit="AddParts" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="partname" class="form-label">PartName:</label> 
+                <InputText id="partname" @bind-Value="Parts.PartName" class="form-control" /> 
+                <ValidationMessage For="() => Parts.PartName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="partnumber" class="form-label">PartNumber:</label> 
+                <InputText id="partnumber" @bind-Value="Parts.PartNumber" class="form-control" /> 
+                <ValidationMessage For="() => Parts.PartNumber" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="partstatus" class="form-label">PartStatus:</label> 
+                <InputText id="partstatus" @bind-Value="Parts.PartStatus" class="form-control" /> 
+                <ValidationMessage For="() => Parts.PartStatus" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="partcost" class="form-label">PartCost:</label> 
+                <InputNumber id="partcost" @bind-Value="Parts.PartCost" class="form-control" /> 
+                <ValidationMessage For="() => Parts.PartCost" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/parts">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Parts Parts { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddParts()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Parts.Add(Parts);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/parts");
+    }
+}

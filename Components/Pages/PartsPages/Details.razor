@@ -1,0 +1,52 @@
+﻿@page "/parts/details"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Parts</h2>
+    <hr />
+    @if (parts is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">PartName</dt>
+            <dd class="col-sm-10">@parts.PartName</dd>
+            <dt class="col-sm-2">PartNumber</dt>
+            <dd class="col-sm-10">@parts.PartNumber</dd>
+            <dt class="col-sm-2">PartStatus</dt>
+            <dd class="col-sm-10">@parts.PartStatus</dd>
+            <dt class="col-sm-2">PartCost</dt>
+            <dd class="col-sm-10">@parts.PartCost</dd>
+        </dl>
+        <div>
+            <a href="@($"/parts/edit?id={parts.Id}")">Edit</a> |
+            <a href="@($"/parts")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Parts? parts;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        parts = await context.Parts.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (parts is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

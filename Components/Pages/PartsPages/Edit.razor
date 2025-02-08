@@ -1,0 +1,104 @@
+﻿@page "/parts/edit"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Parts</h2>
+<hr />
+@if (Parts is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Parts" OnValidSubmit="UpdateParts" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Parts.Id" value="@Parts.Id" />
+                <div class="mb-3">
+                    <label for="partname" class="form-label">PartName:</label>
+                    <InputText id="partname" @bind-Value="Parts.PartName" class="form-control" />
+                    <ValidationMessage For="() => Parts.PartName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="partnumber" class="form-label">PartNumber:</label>
+                    <InputText id="partnumber" @bind-Value="Parts.PartNumber" class="form-control" />
+                    <ValidationMessage For="() => Parts.PartNumber" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="partstatus" class="form-label">PartStatus:</label>
+                    <InputText id="partstatus" @bind-Value="Parts.PartStatus" class="form-control" />
+                    <ValidationMessage For="() => Parts.PartStatus" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="partcost" class="form-label">PartCost:</label>
+                    <InputNumber id="partcost" @bind-Value="Parts.PartCost" class="form-control" />
+                    <ValidationMessage For="() => Parts.PartCost" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/parts">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Parts? Parts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Parts ??= await context.Parts.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Parts is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateParts()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Parts!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PartsExists(Parts!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/parts");
+    }
+
+    private bool PartsExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Parts.Any(e => e.Id == id);
+    }
+}
