@@ -23,22 +23,22 @@ else
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="Parts.Id" value="@Parts.Id" />
                 <div class="mb-3">
-                    <label for="partname" class="form-label">PartName:</label>
+                    <label for="partname" class="form-label">Part Name:</label>
                     <InputText id="partname" @bind-Value="Parts.PartName" class="form-control" />
                     <ValidationMessage For="() => Parts.PartName" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="partnumber" class="form-label">PartNumber:</label>
+                    <label for="partnumber" class="form-label">Part Number:</label>
                     <InputText id="partnumber" @bind-Value="Parts.PartNumber" class="form-control" />
                     <ValidationMessage For="() => Parts.PartNumber" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="partstatus" class="form-label">PartStatus:</label>
+                    <label for="partstatus" class="form-label">Part Status:</label>
                     <InputText id="partstatus" @bind-Value="Parts.PartStatus" class="form-control" />
                     <ValidationMessage For="() => Parts.PartStatus" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="partcost" class="form-label">PartCost:</label>
+                    <label for="partcost" class="form-label">Part Cost:</label>
                     <InputNumber id="partcost" @bind-Value="Parts.PartCost" class="form-control" />
                     <ValidationMessage For="() => Parts.PartCost" class="text-danger" />
                 </div>
