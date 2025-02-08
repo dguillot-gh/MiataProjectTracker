@@ -9,12 +9,17 @@
 <PageTitle>Index</PageTitle>
 
 <h1>Parts Finder</h1>
-
+<div>
+    <form action="/parts" data-enhance>
+        <input type="search" name="filterParts"/>
+        <input type="submit" value="Search" />
+    </form>
+</div>
 <p>
     <a href="parts/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Parts">
+<QuickGrid Class="table" Items="FilteredParts">
     <PropertyColumn Property="parts => parts.PartName" />
     <PropertyColumn Property="parts => parts.PartNumber" />
     <PropertyColumn Property="parts => parts.PartStatus" />
@@ -28,6 +33,12 @@
 </QuickGrid>
 
 @code {
+[SupplyParameterFromQuery]
+    private string? partFilter { get; set; }
+
+    private IQueryable<Parts> FilteredParts =>
+       context.Parts.Where(m => m.PartName != null && m.PartName.Contains(partFilter ?? string.Empty));
+
     private MiataProjectTrackerContext context = default!;
 
     protected override void OnInitialized()
