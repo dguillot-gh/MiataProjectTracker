@@ -17,28 +17,27 @@
     <a href="parts/create">Create New</a>
 </p>
 
+<div>
+    <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
+        <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartCost" />
+        <TemplateColumn Context="parts">
+            <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
+            <a href="@($"parts/details?id={parts.Id}")">Details</a> |
+            <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
+        </TemplateColumn>
+    </QuickGrid>
+</div>
 
-
-<QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
-    <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
-    <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
-    <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
-    <PropertyColumn Property="parts => parts.PartCost" />
-
-    <TemplateColumn Context="parts">
-        <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
-        <a href="@($"parts/details?id={parts.Id}")">Details</a> |
-        <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
-
-<Paginator  State="pagination" />
+<Paginator State="pagination" />
 
 @code {
     private string partFilter = string.Empty;
 
     private IQueryable<Parts> filteredParts =>
-    context.Parts.Where(m => m.PartName.Contains(partFilter));
+        context.Parts.Where(m => m.PartName.Contains(partFilter));
 
     private MiataProjectTrackerContext context = default!;
 
