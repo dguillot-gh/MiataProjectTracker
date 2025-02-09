@@ -14,12 +14,11 @@ public class Parts
     public string? PartNumber { get; set; }
 
     [Required]
-    [StringLength(60, MinimumLength = 3)]
+    [RegularExpression("Accquired|Needed", ErrorMessage = "Part Status must be Accquired, or Needed")]
     public string? PartStatus { get; set; }
 
     [Range(0, 1000)]
     [DataType(DataType.Currency)]
     [Column(TypeName = "decimal(18, 2)")]
-    public decimal? PartCost { get; set; 
-    }
+    public decimal? PartCost { get; set; }
 }

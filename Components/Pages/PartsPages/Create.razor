@@ -6,9 +6,8 @@
 
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
+<h1>Create Parts</h1>
 
-<h2>Parts</h2>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -26,7 +25,7 @@
                 <ValidationMessage For="() => Parts.PartNumber" class="text-danger" /> 
             </div>        
             <div class="mb-3">
-                <label for="partstatus" class="form-label">Part Status:</label> 
+                <label for="partstatus" class="form-label">Part Status (Must be Accquired or Needed):</label> 
                 <InputText id="partstatus" @bind-Value="Parts.PartStatus" class="form-control" /> 
                 <ValidationMessage For="() => Parts.PartStatus" class="text-danger" /> 
             </div>        

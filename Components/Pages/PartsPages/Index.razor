@@ -1,4 +1,5 @@
 ﻿@page "/parts"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using MiataProjectTracker.Models
@@ -10,34 +11,33 @@
 
 <h1>Parts Finder</h1>
 <div>
-    <form action="/parts" data-enhance>
-        <input type="search" name="filterParts"/>
-        <input type="submit" value="Search" />
-    </form>
+    <input type="search" @bind="partFilter" @bind:event="oninput" />
 </div>
 <p>
     <a href="parts/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="filteredParts">
-    <PropertyColumn Property="parts => parts.PartName" />
-    <PropertyColumn Property="parts => parts.PartNumber" />
-    <PropertyColumn Property="parts => parts.PartStatus" />
-    <PropertyColumn Property="parts => parts.PartCost" />
+<div>
+    <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
+        <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
+        <PropertyColumn Property="parts => parts.PartCost" />
+        <TemplateColumn Context="parts">
+            <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
+            <a href="@($"parts/details?id={parts.Id}")">Details</a> |
+            <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
+        </TemplateColumn>
+    </QuickGrid>
+</div>
 
-    <TemplateColumn Context="parts">
-        <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
-        <a href="@($"parts/details?id={parts.Id}")">Details</a> |
-        <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+<Paginator State="pagination" />
 
 @code {
-[SupplyParameterFromQuery]
-    private string? partFilter { get; set; }
+    private string partFilter = string.Empty;
 
     private IQueryable<Parts> filteredParts =>
-       context.Parts.Where(m => m.PartName != null && m.PartName.Contains(partFilter ?? string.Empty));
+        context.Parts.Where(m => m.PartName.Contains(partFilter));
 
     private MiataProjectTrackerContext context = default!;
 
@@ -45,6 +45,8 @@
     {
         context = DbFactory.CreateDbContext();
     }
+
+    private PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
