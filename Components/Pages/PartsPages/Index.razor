@@ -19,7 +19,7 @@
     <a href="parts/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="FilteredParts">
+<QuickGrid Class="table" Items="filteredParts">
     <PropertyColumn Property="parts => parts.PartName" />
     <PropertyColumn Property="parts => parts.PartNumber" />
     <PropertyColumn Property="parts => parts.PartStatus" />
@@ -36,7 +36,7 @@
 [SupplyParameterFromQuery]
     private string? partFilter { get; set; }
 
-    private IQueryable<Parts> FilteredParts =>
+    private IQueryable<Parts> filteredParts =>
        context.Parts.Where(m => m.PartName != null && m.PartName.Contains(partFilter ?? string.Empty));
 
     private MiataProjectTrackerContext context = default!;
