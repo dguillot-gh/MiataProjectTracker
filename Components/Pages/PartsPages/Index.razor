@@ -11,10 +11,7 @@
 
 <h1>Parts Finder</h1>
 <div>
-    <form action="/parts" data-enhance>
-        <input type="search" name="filterParts"/>
-        <input type="submit" value="Search" />
-    </form>
+    <input type="search" @bind="partFilter" @bind:event="oninput" />
 </div>
 <p>
     <a href="parts/create">Create New</a>
@@ -23,9 +20,9 @@
 
 
 <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
-    <PropertyColumn Property="parts => parts.PartName" />
-    <PropertyColumn Property="parts => parts.PartNumber" />
-    <PropertyColumn Property="parts => parts.PartStatus" />
+    <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
+    <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
+    <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
     <PropertyColumn Property="parts => parts.PartCost" />
 
     <TemplateColumn Context="parts">
@@ -38,11 +35,10 @@
 <Paginator  State="pagination" />
 
 @code {
-[SupplyParameterFromQuery]
-    private string? partFilter { get; set; }
+    private string partFilter = string.Empty;
 
     private IQueryable<Parts> filteredParts =>
-       context.Parts.Where(m => m.PartName != null && m.PartName.Contains(partFilter ?? string.Empty));
+    context.Parts.Where(m => m.PartName.Contains(partFilter));
 
     private MiataProjectTrackerContext context = default!;
 
