@@ -5,48 +5,161 @@
 @using MiataProjectTracker.Models
 @using MiataProjectTracker.Data
 @implements IAsyncDisposable
-@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject IDbContextFactory<MiataProjectTrackerContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Parts Finder</PageTitle>
 
-<h1>Parts Finder</h1>
-<div>
-    <input type="search" @bind="partFilter" @bind:event="oninput" />
+<h1 class="title">Parts Finder</h1>
+
+<div class="search-container">
+    <input type="search" class="search-box" @bind="partFilter" @bind:event="oninput" placeholder="Search for parts..." />
+    <button @onclick="ClearFilter" class="clear-btn">✖</button>
 </div>
+
 <p>
-    <a href="parts/create">Create New</a>
+    <a href="parts/create" class="btn-create">➕ Create New</a>
 </p>
 
-<div>
-    <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
-        <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartCost" />
+<div class="table-container">
+    <QuickGrid Class="styled-table" Items="filteredParts" Pagination="pagination">
+        <PropertyColumn Property="parts => parts.PartName" Sortable="true" Title="Part Name" />
+        <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" Title="Part Number" />
+        <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" Title="Status" />
+        <PropertyColumn Property="parts => parts.PartCost" Title="Cost ($)" />
         <TemplateColumn Context="parts">
-            <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
-            <a href="@($"parts/details?id={parts.Id}")">Details</a> |
-            <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
+            <div class="action-links">
+                <a href="@($"parts/edit?id={parts.Id}")" class="edit">✏ Edit</a> |
+                <a href="@($"parts/details?id={parts.Id}")" class="details">🔍 Details</a> |
+                <a href="@($"parts/delete?id={parts.Id}")" class="delete">🗑 Delete</a>
+            </div>
         </TemplateColumn>
     </QuickGrid>
 </div>
 
 <Paginator State="pagination" />
 
-@code {
-    private string partFilter = string.Empty;
-
-    private IQueryable<Parts> filteredParts =>
-        context.Parts.Where(m => m.PartName.Contains(partFilter));
-
-    private MiataProjectTrackerContext context = default!;
-
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
+<style>
+    .title {
+        text-align: center;
+        color: #444;
+        margin-bottom: 20px;
     }
 
+    .search-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+    .search-box {
+        padding: 8px;
+        font-size: 1rem;
+        width: 250px;
+        border: 1px solid #aaa;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        color: #333;
+    }
+
+    .clear-btn {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        margin-left: 5px;
+        color: #666;
+    }
+
+    .btn-create {
+        display: inline-block;
+        padding: 8px 12px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        margin-top: 15px;
+    }
+
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 5px;
+        overflow: hidden;
+        background: #f1f1f1;
+    }
+
+        .styled-table th, .styled-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .styled-table th {
+            background: #495057;
+            color: white;
+        }
+
+        .styled-table tr:nth-child(even) {
+            background: #e9ecef;
+        }
+
+    .action-links {
+        display: flex;
+        gap: 8px;
+    }
+
+        .action-links a {
+            text-decoration: none;
+            padding: 5px 8px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+    .edit {
+        background: #adb5bd;
+        color: black;
+    }
+
+    .details {
+        background: #6c757d;
+        color: white;
+    }
+
+    .delete {
+        background: #b03a2e;
+        color: white;
+    }
+</style>
+
+@code {
+    private string partFilter = string.Empty;
+    private IQueryable<Parts> filteredParts = Enumerable.Empty<Parts>().AsQueryable();
+    private MiataProjectTrackerContext context = default!;
     private PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        context = await DbFactory.CreateDbContextAsync();
+        LoadParts();
+    }
+
+    private void LoadParts()
+    {
+        filteredParts = context.Parts
+            .Where(p => string.IsNullOrEmpty(partFilter) || p.PartName.Contains(partFilter));
+    }
+
+    private void ClearFilter()
+    {
+        partFilter = "";
+        LoadParts();
+    }
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 }
