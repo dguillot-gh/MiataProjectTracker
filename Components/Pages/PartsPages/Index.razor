@@ -9,13 +9,13 @@
 
 <PageTitle>Index</PageTitle>
 
-<h1>Parts Finder</h1>
-<div>
+<h1 style="text-align: center;">Parts Finder</h1>
+<div style="display: flex; justify-content: center; margin-bottom: 15px;">
     <input type="search" @bind="partFilter" @bind:event="oninput" />
 </div>
-<p>
-    <a href="parts/create">Create New</a>
-</p>
+<div style="display: flex; justify-content: center; margin-bottom: 15px;">
+    <a href="parts/create" style="padding: 8px 12px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Create New</a>
+</div>
 
 <div>
     <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
