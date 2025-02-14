@@ -1,0 +1,49 @@
+﻿@page "/buildlog"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MiataProjectTracker.Models
+@using MiataProjectTracker.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="buildlog/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.BuildLog">
+    <PropertyColumn Property="buildlog => buildlog.Title" Title="Title" />
+    <TemplateColumn Context="buildlog" Title="Summary">
+        <span>@TruncateSummary(buildlog.Summary, 50)</span> <!-- Show only 100 characters -->
+    </TemplateColumn>
+    <PropertyColumn Property="buildlog => buildlog.Tag" Title="Tag" />
+    <PropertyColumn Property="buildlog => buildlog.Date" Title="Date" />
+
+    <TemplateColumn Context="buildlog">
+        <a href="@($"buildlog/edit?id={buildlog.Id}")">Edit</a> |
+        <a href="@($"buildlog/details?id={buildlog.Id}")">Details</a> |
+        <a href="@($"buildlog/delete?id={buildlog.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private MiataProjectTrackerContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    private string TruncateSummary(string? summary, int maxLength)
+    {
+        if (string.IsNullOrEmpty(summary) || summary.Length <= maxLength)
+            return summary;
+
+        return summary.Substring(0, maxLength) + "...";
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

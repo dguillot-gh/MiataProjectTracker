@@ -1,0 +1,59 @@
+﻿@page "/buildlog/create"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>BuildLog</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="BuildLog" OnValidSubmit="AddBuildLog" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="title" class="form-label">Title:</label> 
+                <InputText id="title" @bind-Value="BuildLog.Title" class="form-control" aria-required="true"/> 
+                <ValidationMessage For="() => BuildLog.Title" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="summary" class="form-label">Summary:</label> 
+                <InputText id="summary" @bind-Value="BuildLog.Summary" class="form-control" aria-required="true"/> 
+                <ValidationMessage For="() => BuildLog.Summary" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="tag" class="form-label">Tag:</label> 
+                <InputText id="tag" @bind-Value="BuildLog.Tag" class="form-control" aria-required="true"/> 
+                <ValidationMessage For="() => BuildLog.Tag" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="date" class="form-label">Date:</label> 
+                <InputDate id="date" @bind-Value="BuildLog.Date" class="form-control" /> 
+                <ValidationMessage For="() => BuildLog.Date" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/buildlog">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private BuildLog BuildLog { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddBuildLog()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.BuildLog.Add(BuildLog);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/buildlog");
+    }
+}
