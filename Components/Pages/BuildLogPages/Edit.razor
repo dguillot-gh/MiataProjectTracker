@@ -23,6 +23,11 @@ else
                 <ValidationSummary role="alert"/>
                 <input type="hidden" name="BuildLog.Id" value="@BuildLog.Id" />
                 <div class="mb-3">
+                    <label for="tag" class="form-label">Tag:</label>
+                    <InputText id="tag" @bind-Value="BuildLog.Tag" class="form-control" aria-required="true"/>
+                    <ValidationMessage For="() => BuildLog.Tag" class="text-danger" />
+                </div>
+                <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
                     <InputText id="title" @bind-Value="BuildLog.Title" class="form-control" aria-required="true"/>
                     <ValidationMessage For="() => BuildLog.Title" class="text-danger" />
@@ -31,11 +36,6 @@ else
                     <label for="summary" class="form-label">Summary:</label>
                     <InputText id="summary" @bind-Value="BuildLog.Summary" class="form-control" aria-required="true"/>
                     <ValidationMessage For="() => BuildLog.Summary" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="tag" class="form-label">Tag:</label>
-                    <InputText id="tag" @bind-Value="BuildLog.Tag" class="form-control" aria-required="true"/>
-                    <ValidationMessage For="() => BuildLog.Tag" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="date" class="form-label">Date:</label>
