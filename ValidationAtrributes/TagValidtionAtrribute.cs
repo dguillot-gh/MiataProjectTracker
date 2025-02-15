@@ -18,7 +18,7 @@ namespace MiataProjectTracker.ValidationAttributes
             "wheels",
             "intake",
             "cooling",
-
+            "tuning"
         };
 
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
