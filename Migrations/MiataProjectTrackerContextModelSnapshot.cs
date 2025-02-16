@@ -43,6 +43,38 @@ namespace MiataProjectTracker.Migrations
                     b.ToTable("BuildLog");
                 });
 
+            modelBuilder.Entity("MiataProjectTracker.Models.KanbanTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KanbanTask");
+                });
+
             modelBuilder.Entity("MiataProjectTracker.Models.Parts", b =>
                 {
                     b.Property<int>("Id")
