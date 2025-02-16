@@ -3,6 +3,7 @@ using System;
 using MiataProjectTracker.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MiataProjectTracker.Migrations
 {
     [DbContext(typeof(MiataProjectTrackerContext))]
-    partial class MiataProjectTrackerContextModelSnapshot : ModelSnapshot
+    [Migration("20250216002942_sqlite_migration_596")]
+    partial class sqlite_migration_596
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.2");
@@ -43,38 +46,6 @@ namespace MiataProjectTracker.Migrations
                     b.ToTable("BuildLog");
                 });
 
-            modelBuilder.Entity("MiataProjectTracker.Models.KanbanTask", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("Priority")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("KanbanTask");
-                });
-
             modelBuilder.Entity("MiataProjectTracker.Models.Parts", b =>
                 {
                     b.Property<int>("Id")
@@ -99,6 +70,36 @@ namespace MiataProjectTracker.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Parts");
+                });
+
+            modelBuilder.Entity("MiataProjectTracker.Models.PriceComparison", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("ActualPaidPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("NewPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PartName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PurchaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PriceComparison");
                 });
 #pragma warning restore 612, 618
         }
