@@ -10,43 +10,124 @@
 <PageTitle>Index</PageTitle>
 
 <h1 style="text-align: center;">Parts Finder</h1>
-<div style="display: flex; justify-content: center; margin-bottom: 15px;">
-    <input type="search" @bind="partFilter" @bind:event="oninput" />
-</div>
-<div style="display: flex; justify-content: center; margin-bottom: 15px;">
-    <a href="parts/create" style="padding: 8px 12px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Create New</a>
+
+<div class="search-container">
+    <div class="search-box">
+        <input type="search"
+               placeholder="Search parts..."
+               @bind="partFilter"
+               @bind:event="oninput"
+               class="form-control" />
+        <select @bind="searchField" class="form-select">
+            <option value="name">Name</option>
+            <option value="number">Part Number</option>
+            <option value="all">All Fields</option>
+        </select>
+    </div>
+    <a href="parts/create" class="btn btn-success">Create New</a>
 </div>
 
-<div>
-    <QuickGrid Class="table" Items="filteredParts" Pagination="pagination">
-        <PropertyColumn Property="parts => parts.PartName" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartNumber" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartStatus" Sortable="true" />
-        <PropertyColumn Property="parts => parts.PartCost" />
-        <TemplateColumn Context="parts">
-            <a href="@($"parts/edit?id={parts.Id}")">Edit</a> |
-            <a href="@($"parts/details?id={parts.Id}")">Details</a> |
-            <a href="@($"parts/delete?id={parts.Id}")">Delete</a>
-        </TemplateColumn>
-    </QuickGrid>
-</div>
+@if (isLoading)
+{
+    <div class="loading-spinner">Loading...</div>
+}
+else if (error != null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else
+{
+    <div class="grid-container">
+        <QuickGrid Class="table table-striped table-hover" Items="filteredParts" Pagination="pagination">
+            <PropertyColumn Property="parts => parts.PartName"
+                            Title="Part Name"
+                            Sortable="true" />
+            <PropertyColumn Property="parts => parts.PartNumber"
+                            Title="Part Number"
+                            Sortable="true" />
+            <PropertyColumn Property="parts => parts.PartStatus"
+                            Title="Status"
+                            Sortable="true" />
+            <PropertyColumn Property="parts => parts.PartCost"
+                            Title="Cost"
+                            Format="{0:C}" />
+            <TemplateColumn Title="Actions">
+                <div class="btn-group">
+                    <a class="btn btn-sm btn-primary" href="@($"parts/edit?id={context.Id}")">Edit</a>
+                    <a class="btn btn-sm btn-info" href="@($"parts/details?id={context.Id}")">Details</a>
+                    <a class="btn btn-sm btn-danger" href="@($"parts/delete?id={context.Id}")">Delete</a>
+                </div>
+            </TemplateColumn>
+        </QuickGrid>
+    </div>
+}
 
 <Paginator State="pagination" />
 
-@code {
-    private string partFilter = string.Empty;
-
-    private IQueryable<Parts> filteredParts =>
-        context.Parts.Where(m => m.PartName.Contains(partFilter));
-
-    private MiataProjectTrackerContext context = default!;
-
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
+<style>
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
     }
 
-    private PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
+    .search-box {
+        display: flex;
+        gap: 1rem;
+        flex: 1;
+        max-width: 500px;
+    }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    .grid-container {
+        overflow-x: auto;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 2rem;
+    }
+</style>
+
+@code {
+    private string partFilter = string.Empty;
+    private string searchField = "name";
+    private bool isLoading = true;
+    private string? error;
+    private MiataProjectTrackerContext context = default!;
+    private PaginationState pagination = new() { ItemsPerPage = 10 };
+
+    private IQueryable<Parts> filteredParts => searchField switch
+    {
+        "name" => context.Parts.Where(m => m.PartName.Contains(partFilter)),
+        "number" => context.Parts.Where(m => m.PartNumber.Contains(partFilter)),
+        "all" => context.Parts.Where(m =>
+            m.PartName.Contains(partFilter) ||
+            m.PartNumber.Contains(partFilter) ||
+            m.PartStatus.Contains(partFilter)),
+        _ => context.Parts
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            context = await DbFactory.CreateDbContextAsync();
+            isLoading = false;
+        }
+        catch (Exception ex)
+        {
+            error = $"Error loading parts: {ex.Message}";
+            isLoading = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (context is not null)
+        {
+            await context.DisposeAsync();
+        }
+    }
 }
