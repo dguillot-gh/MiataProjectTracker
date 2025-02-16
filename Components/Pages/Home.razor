@@ -1,7 +1,72 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+<div class="min-h-screen bg-gray-50 p-8">
+    <div class="max-w-3xl mx-auto">
+        <!-- Welcome Card -->
+        <div class="bg-white rounded-xl shadow-sm p-8 mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Miata Project Tracker</h1>
+            <p class="text-gray-600">Keep track of your build progress and parts</p>
+        </div>
 
-<h1>Hello, world!</h1>
+        <!-- Build Summary Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Build Summary</h2>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Vehicle Details</h3>
+                    <dl class="space-y-2">
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Year:</dt>
+                            <dd class="text-gray-900 font-medium">1995</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Model:</dt>
+                            <dd class="text-gray-900 font-medium">Miata NA</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Color:</dt>
+                            <dd class="text-gray-900 font-medium">Classic Red</dd>
+                        </div>
+                    </dl>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Current Mods</h3>
+                    <dl class="space-y-2">
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Engine:</dt>
+                            <dd class="text-gray-900 font-medium">Stock 1.8L</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Suspension:</dt>
+                            <dd class="text-gray-900 font-medium">Coilovers</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-600">Wheels:</dt>
+                            <dd class="text-gray-900 font-medium">15x8 RPF1</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </div>
 
-Welcome to your new app.
+        <!-- Navigation Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Timeline Card -->
+            <a href="/timeline" class="block">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Build Timeline</h2>
+                    <p class="text-gray-600 text-sm">Track your project progress and tasks</p>
+                </div>
+            </a>
+
+            <!-- Price Tracker Card -->
+            <a href="/pricetracker" class="block">
+                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Price Tracker</h2>
+                    <p class="text-gray-600 text-sm">Monitor your parts and savings</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
