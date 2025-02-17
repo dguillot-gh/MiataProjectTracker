@@ -1,0 +1,131 @@
+﻿@page "/buildtracker"
+@rendermode InteractiveServer
+
+<h1>Turbo Build Progress Tracker</h1>
+
+<div class="columns-container" style="display: flex; gap: 20px;">
+    <!-- Not Started -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>Not Started</h2>
+        @foreach (var task in notStartedTasks)
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                <button @onclick="() => MoveToInProgress(task)">Start Task</button>
+            </div>
+        }
+    </div>
+
+    <!-- In Progress -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>In Progress</h2>
+        @foreach (var task in inProgressTasks)
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                <button @onclick="() => MoveToCompleted(task)">Complete Task</button>
+            </div>
+        }
+    </div>
+
+    <!-- Completed -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>Completed</h2>
+        @foreach (var task in completedTasks)
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                <span style="color: green;">✓ Done</span>
+            </div>
+        }
+    </div>
+</div>
+
+<button @onclick="AddNewTask" style="margin-top: 20px;">Add New Task</button>
+
+@if (showAddDialog)
+{
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h3>Add New Task</h3>
+        <div>
+            <label>Title:</label>
+            <input @bind="newTask.Title" />
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Description:</label>
+            <input @bind="newTask.Description" />
+        </div>
+        <div style="margin-top: 10px;">
+            <button @onclick="SaveNewTask">Save</button>
+            <button @onclick="CancelAdd">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    public class BuildTask
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Status { get; set; } = "NotStarted";
+    }
+
+    private List<BuildTask> notStartedTasks = new();
+    private List<BuildTask> inProgressTasks = new();
+    private List<BuildTask> completedTasks = new();
+    private bool showAddDialog = false;
+    private BuildTask newTask = new();
+
+    protected override void OnInitialized()
+    {
+        // Sample initial tasks
+        notStartedTasks = new List<BuildTask>
+        {
+            new BuildTask { Id = 1, Title = "Install Intercooler", Description = "Mount and connect intercooler" },
+            new BuildTask { Id = 2, Title = "Install BOV", Description = "Mount and connect blow off valve" },
+            new BuildTask { Id = 3, Title = "Install Turbo", Description = "Mount turbo manifold and turbo" }
+        };
+    }
+
+    private void MoveToInProgress(BuildTask task)
+    {
+        notStartedTasks.Remove(task);
+        task.Status = "InProgress";
+        inProgressTasks.Add(task);
+    }
+
+    private void MoveToCompleted(BuildTask task)
+    {
+        inProgressTasks.Remove(task);
+        task.Status = "Completed";
+        completedTasks.Add(task);
+    }
+
+    private void AddNewTask()
+    {
+        showAddDialog = true;
+        newTask = new BuildTask();
+    }
+
+    private void SaveNewTask()
+    {
+        if (!string.IsNullOrWhiteSpace(newTask.Title))
+        {
+            newTask.Id = notStartedTasks.Count + inProgressTasks.Count + completedTasks.Count + 1;
+            notStartedTasks.Add(newTask);
+            showAddDialog = false;
+            newTask = new BuildTask();
+        }
+    }
+
+    private void CancelAdd()
+    {
+        showAddDialog = false;
+        newTask = new BuildTask();
+    }
+}
