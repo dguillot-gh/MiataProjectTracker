@@ -1,0 +1,149 @@
+﻿@page "/buildtracker"
+@rendermode InteractiveServer
+@using MiataProjectTracker.Models
+@using MiataProjectTracker.ValidationAttributes
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+
+<h1>Turbo Build Progress Tracker</h1>
+
+<div class="columns-container" style="display: flex; gap: 20px;">
+    <!-- Not Started -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>Not Started</h2>
+        @foreach (var task in tasks.Where(t => t.Status == "Not Started"))
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                @if (task.PartsNeeded)
+                {
+                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
+                        Parts Needed
+                    </span>
+                }
+                <button @onclick="@(() => MoveToStatus(task, "In Progress"))">Start Task</button>
+            </div>
+        }
+    </div>
+
+    <!-- In Progress -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>In Progress</h2>
+        @foreach (var task in tasks.Where(t => t.Status == "In Progress"))
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                @if (task.PartsNeeded)
+                {
+                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
+                        Parts Needed
+                    </span>
+                }
+                <button @onclick="@(() => MoveToStatus(task, "Done"))">Complete Task</button>
+            </div>
+        }
+    </div>
+
+    <!-- Done -->
+    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+        <h2>Done</h2>
+        @foreach (var task in tasks.Where(t => t.Status == "Done"))
+        {
+            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
+                <h3>@task.Title</h3>
+                <p>@task.Description</p>
+                @if (task.PartsNeeded)
+                {
+                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
+                        Parts Needed
+                    </span>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<button @onclick="AddNewTask" style="margin-top: 20px;">Add New Task</button>
+
+@if (showAddDialog)
+{
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h3>Add New Task</h3>
+        <div>
+            <label>Title:</label>
+            <input @bind="newTask.Title" />
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Description:</label>
+            <input @bind="newTask.Description" />
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Status:</label>
+            <select @bind="newTask.Status">
+                @foreach (var status in StatusValidationAttribute.GetAllowedStatuses())
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>
+                <input type="checkbox" @bind="newTask.PartsNeeded" />
+                Parts Needed
+            </label>
+        </div>
+        <div style="margin-top: 10px;">
+            <button @onclick="SaveNewTask">Save</button>
+            <button @onclick="CancelAdd">Cancel</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<BuildTasks> tasks = new();
+    private bool showAddDialog = false;
+    private BuildTasks newTask = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        tasks = await context.BuildTasks.ToListAsync();
+    }
+
+    private async Task MoveToStatus(BuildTasks task, string newStatus)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        task.Status = newStatus;
+        context.BuildTasks.Update(task);
+        await context.SaveChangesAsync();
+        StateHasChanged();
+    }
+
+    private void AddNewTask()
+    {
+        showAddDialog = true;
+        newTask = new BuildTasks { Status = "Not Started" };
+    }
+
+    private async Task SaveNewTask()
+    {
+        if (!string.IsNullOrWhiteSpace(newTask.Title))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            context.BuildTasks.Add(newTask);
+            await context.SaveChangesAsync();
+            tasks.Add(newTask);
+            showAddDialog = false;
+            newTask = new BuildTasks();
+        }
+    }
+
+    private void CancelAdd()
+    {
+        showAddDialog = false;
+        newTask = new BuildTasks();
+    }
+}
