@@ -19,5 +19,6 @@ namespace MiataProjectTracker.Models
 
         
         public bool PartsNeeded { get; set; } = false; 
+        public bool PartsAcquired { get; set; } = false;   
     }
 }

@@ -16,12 +16,20 @@
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <h3>@task.Title</h3>
                 <p>@task.Description</p>
-                @if (task.PartsNeeded)
-                {
-                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
-                        Parts Needed
-                    </span>
-                }
+                <div style="margin-bottom: 8px;">
+                    @if (task.PartsNeeded)
+                    {
+                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
+                            Parts Needed
+                        </span>
+                    }
+                    @if (task.PartsAcquired)
+                    {
+                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                            Parts Acquired
+                        </span>
+                    }
+                </div>
                 <button @onclick="@(() => MoveToStatus(task, "In Progress"))">Start Task</button>
             </div>
         }
@@ -35,12 +43,20 @@
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <h3>@task.Title</h3>
                 <p>@task.Description</p>
-                @if (task.PartsNeeded)
-                {
-                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
-                        Parts Needed
-                    </span>
-                }
+                <div style="margin-bottom: 8px;">
+                    @if (task.PartsNeeded)
+                    {
+                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
+                            Parts Needed
+                        </span>
+                    }
+                    @if (task.PartsAcquired)
+                    {
+                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                            Parts Acquired
+                        </span>
+                    }
+                </div>
                 <button @onclick="@(() => MoveToStatus(task, "Done"))">Complete Task</button>
             </div>
         }
@@ -54,12 +70,20 @@
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <h3>@task.Title</h3>
                 <p>@task.Description</p>
-                @if (task.PartsNeeded)
-                {
-                    <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-bottom: 8px; display: inline-block;">
-                        Parts Needed
-                    </span>
-                }
+                <div style="margin-bottom: 8px;">
+                    @if (task.PartsNeeded)
+                    {
+                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
+                            Parts Needed
+                        </span>
+                    }
+                    @if (task.PartsAcquired)
+                    {
+                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
+                            Parts Acquired
+                        </span>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -93,6 +117,12 @@
             <label>
                 <input type="checkbox" @bind="newTask.PartsNeeded" />
                 Parts Needed
+            </label>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>
+                <input type="checkbox" @bind="newTask.PartsAcquired" />
+                Parts Acquired
             </label>
         </div>
         <div style="margin-top: 10px;">
