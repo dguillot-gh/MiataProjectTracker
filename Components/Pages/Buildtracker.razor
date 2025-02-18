@@ -14,7 +14,12 @@
         @foreach (var task in tasks.Where(t => t.Status == "Not Started"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <h3>@task.Title</h3>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h3>@task.Title</h3>
+                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                        ✏️
+                    </button>
+                </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
                     @if (task.PartsNeeded)
@@ -41,7 +46,12 @@
         @foreach (var task in tasks.Where(t => t.Status == "In Progress"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <h3>@task.Title</h3>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h3>@task.Title</h3>
+                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                        ✏️
+                    </button>
+                </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
                     @if (task.PartsNeeded)
@@ -68,7 +78,12 @@
         @foreach (var task in tasks.Where(t => t.Status == "Done"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <h3>@task.Title</h3>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h3>@task.Title</h3>
+                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                        ✏️
+                    </button>
+                </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
                     @if (task.PartsNeeded)
@@ -132,10 +147,53 @@
     </div>
 }
 
+@if (showEditDialog)
+{
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h3>Edit Task</h3>
+        <div>
+            <label>Title:</label>
+            <input @bind="editingTask.Title" />
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Description:</label>
+            <input @bind="editingTask.Description" />
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Status:</label>
+            <select @bind="editingTask.Status">
+                @foreach (var status in StatusValidationAttribute.GetAllowedStatuses())
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>
+                <input type="checkbox" @bind="editingTask.PartsNeeded" />
+                Parts Needed
+            </label>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>
+                <input type="checkbox" @bind="editingTask.PartsAcquired" />
+                Parts Acquired
+            </label>
+        </div>
+        <div style="margin-top: 10px;">
+            <button @onclick="SaveEdit">Save</button>
+            <button @onclick="CancelEdit">Cancel</button>
+        </div>
+    </div>
+}
+
 @code {
     private List<BuildTasks> tasks = new();
     private bool showAddDialog = false;
+    private bool showEditDialog = false;
     private BuildTasks newTask = new();
+    private BuildTasks editingTask = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -175,5 +233,58 @@
     {
         showAddDialog = false;
         newTask = new BuildTasks();
+    }
+
+    private void EditTask(BuildTasks task)
+    {
+        editingTask = new BuildTasks
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                Status = task.Status,
+                PartsNeeded = task.PartsNeeded,
+                PartsAcquired = task.PartsAcquired
+            };
+        showEditDialog = true;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (!string.IsNullOrWhiteSpace(editingTask.Title))
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+
+            var task = await context.BuildTasks.FindAsync(editingTask.Id);
+            if (task != null)
+            {
+                task.Title = editingTask.Title;
+                task.Description = editingTask.Description;
+                task.Status = editingTask.Status;
+                task.PartsNeeded = editingTask.PartsNeeded;
+                task.PartsAcquired = editingTask.PartsAcquired;
+
+                await context.SaveChangesAsync();
+
+                var existingTask = tasks.FirstOrDefault(t => t.Id == editingTask.Id);
+                if (existingTask != null)
+                {
+                    existingTask.Title = editingTask.Title;
+                    existingTask.Description = editingTask.Description;
+                    existingTask.Status = editingTask.Status;
+                    existingTask.PartsNeeded = editingTask.PartsNeeded;
+                    existingTask.PartsAcquired = editingTask.PartsAcquired;
+                }
+            }
+
+            showEditDialog = false;
+            editingTask = new BuildTasks();
+        }
+    }
+
+    private void CancelEdit()
+    {
+        showEditDialog = false;
+        editingTask = new BuildTasks();
     }
 }
