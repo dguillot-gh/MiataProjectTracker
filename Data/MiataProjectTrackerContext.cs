@@ -17,5 +17,6 @@ namespace MiataProjectTracker.Data
         public DbSet<MiataProjectTracker.Models.Parts> Parts { get; set; } = default!;
         public DbSet<MiataProjectTracker.Models.BuildLog> BuildLog { get; set; } = default!;
         public DbSet<MiataProjectTracker.Models.PriceComparison> PriceComparison { get; set; } = default!;
+        public DbSet<MiataProjectTracker.Models.BuildTasks> BuildTasks { get; set; } = default!;
     }
 }
