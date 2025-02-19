@@ -5,20 +5,45 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 
-<h1>Turbo Build Progress Tracker</h1>
+<!-- Improved top bar with search -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+    <h1 style="margin: 0;">Turbo Build Progress Tracker</h1>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <input type="text"
+               placeholder="Search tasks..."
+               @bind-value="searchTerm"
+               @bind-value:event="oninput"
+               style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-width: 200px;" />
+        <select @bind="selectedCategory" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <option value="">All Categories</option>
+            @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
+            {
+                <option value="@category">@category</option>
+            }
+        </select>
+        <button @onclick="AddNewTask" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <span style="margin-right: 5px;">+</span> New Task
+        </button>
+    </div>
+</div>
 
 <div class="columns-container" style="display: flex; gap: 20px;">
     <!-- Not Started -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
         <h2>Not Started</h2>
-        @foreach (var task in tasks.Where(t => t.Status == "Not Started"))
+        @foreach (var task in FilteredTasks().Where(t => t.Status == "Not Started"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <h3>@task.Title</h3>
-                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                        ✏️
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
+                            @task.Category
+                        </span>
+                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                            ✏️
+                        </button>
+                    </div>
                 </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
@@ -43,14 +68,19 @@
     <!-- In Progress -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
         <h2>In Progress</h2>
-        @foreach (var task in tasks.Where(t => t.Status == "In Progress"))
+        @foreach (var task in FilteredTasks().Where(t => t.Status == "In Progress"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <h3>@task.Title</h3>
-                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                        ✏️
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
+                            @task.Category
+                        </span>
+                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                            ✏️
+                        </button>
+                    </div>
                 </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
@@ -75,14 +105,19 @@
     <!-- Done -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
         <h2>Done</h2>
-        @foreach (var task in tasks.Where(t => t.Status == "Done"))
+        @foreach (var task in FilteredTasks().Where(t => t.Status == "Done"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <h3>@task.Title</h3>
-                    <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                        ✏️
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
+                            @task.Category
+                        </span>
+                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
+                            ✏️
+                        </button>
+                    </div>
                 </div>
                 <p>@task.Description</p>
                 <div style="margin-bottom: 8px;">
@@ -104,8 +139,7 @@
     </div>
 </div>
 
-<button @onclick="AddNewTask" style="margin-top: 20px;">Add New Task</button>
-
+<!-- Add New Task Dialog -->
 @if (showAddDialog)
 {
     <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -129,6 +163,15 @@
             </select>
         </div>
         <div style="margin-top: 10px;">
+            <label>Category:</label>
+            <select @bind="newTask.Category">
+                @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
             <label>
                 <input type="checkbox" @bind="newTask.PartsNeeded" />
                 Parts Needed
@@ -147,6 +190,7 @@
     </div>
 }
 
+<!-- Edit Dialog -->
 @if (showEditDialog)
 {
     <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -166,6 +210,15 @@
                 @foreach (var status in StatusValidationAttribute.GetAllowedStatuses())
                 {
                     <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+        <div style="margin-top: 10px;">
+            <label>Category:</label>
+            <select @bind="editingTask.Category">
+                @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
+                {
+                    <option value="@category">@category</option>
                 }
             </select>
         </div>
@@ -194,11 +247,32 @@
     private bool showEditDialog = false;
     private BuildTasks newTask = new();
     private BuildTasks editingTask = new();
+    private string selectedCategory = "";
+    private string searchTerm = "";
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
         tasks = await context.BuildTasks.ToListAsync();
+    }
+
+    private IEnumerable<BuildTasks> FilteredTasks()
+    {
+        var filtered = tasks.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(selectedCategory))
+        {
+            filtered = filtered.Where(t => t.Category == selectedCategory);
+        }
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            filtered = filtered.Where(t =>
+                t.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return filtered;
     }
 
     private async Task MoveToStatus(BuildTasks task, string newStatus)
@@ -213,7 +287,7 @@
     private void AddNewTask()
     {
         showAddDialog = true;
-        newTask = new BuildTasks { Status = "Not Started" };
+        newTask = new BuildTasks { Status = "Not Started", Category = "Other" };
     }
 
     private async Task SaveNewTask()
@@ -243,6 +317,7 @@
                 Title = task.Title,
                 Description = task.Description,
                 Status = task.Status,
+                Category = task.Category,
                 PartsNeeded = task.PartsNeeded,
                 PartsAcquired = task.PartsAcquired
             };
@@ -254,13 +329,13 @@
         if (!string.IsNullOrWhiteSpace(editingTask.Title))
         {
             using var context = await DbFactory.CreateDbContextAsync();
-
             var task = await context.BuildTasks.FindAsync(editingTask.Id);
             if (task != null)
             {
                 task.Title = editingTask.Title;
                 task.Description = editingTask.Description;
                 task.Status = editingTask.Status;
+                task.Category = editingTask.Category;
                 task.PartsNeeded = editingTask.PartsNeeded;
                 task.PartsAcquired = editingTask.PartsAcquired;
 
@@ -272,6 +347,7 @@
                     existingTask.Title = editingTask.Title;
                     existingTask.Description = editingTask.Description;
                     existingTask.Status = editingTask.Status;
+                    existingTask.Category = editingTask.Category;
                     existingTask.PartsNeeded = editingTask.PartsNeeded;
                     existingTask.PartsAcquired = editingTask.PartsAcquired;
                 }

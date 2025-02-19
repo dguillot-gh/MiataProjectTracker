@@ -17,8 +17,11 @@ namespace MiataProjectTracker.Models
         [StatusValidation]
         public string Status { get; set; } = "Not Started";
 
-        
-        public bool PartsNeeded { get; set; } = false; 
-        public bool PartsAcquired { get; set; } = false;   
+        [Required(ErrorMessage = "Category is required")]
+        [CategoryValidation]
+        public string Category { get; set; } = "Other";
+
+        public bool PartsNeeded { get; set; } = false;
+        public bool PartsAcquired { get; set; } = false;
     }
 }
