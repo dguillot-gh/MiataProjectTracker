@@ -7,120 +7,175 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 
-<div class="p-8 bg-gray-100 min-h-screen">
+<div class="p-4 bg-gray-100 min-h-screen">
     <div class="max-w-6xl mx-auto">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total New Value</h3>
+        <!-- Compact Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-sm font-medium text-gray-500">Total New Value</h3>
                 <p class="text-2xl font-bold text-gray-900">$@totalNewPrice.ToString("N2")</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total Paid</h3>
+            <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-sm font-medium text-gray-500">Total Paid</h3>
                 <p class="text-2xl font-bold text-gray-900">$@totalPaidPrice.ToString("N2")</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-green-100">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total Savings</h3>
+            <div class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <h3 class="text-sm font-medium text-gray-500">Total Savings</h3>
                 <p class="text-2xl font-bold text-green-600">$@totalSavings.ToString("N2")</p>
                 <span class="text-sm text-green-600">@averageSavingsPercentage.ToString("N0")% Average Savings</span>
             </div>
         </div>
 
-        <!-- Header Section -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div class="flex justify-between items-center">
+        <!-- Header Section with Search and Sort -->
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Parts List</h1>
-                    <p class="text-sm text-gray-500 mt-1">Track your parts and savings</p>
+                    <h1 class="text-xl font-bold text-gray-900">Parts List</h1>
+                    <p class="text-sm text-gray-500">Track your parts and savings</p>
                 </div>
                 <button @onclick="AddNewEntry"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
                     Add Part
                 </button>
             </div>
+            <div class="flex gap-3">
+                <div class="flex-1">
+                    <input type="text"
+                           placeholder="Search parts..."
+                           @bind-value="searchTerm"
+                           @bind-value:event="oninput"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                </div>
+                <select @bind="sortOption"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="name">Sort by Name</option>
+                    <option value="savings">Sort by Savings</option>
+                    <option value="price">Sort by Price</option>
+                    <option value="source">Sort by Source</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Table Section -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Part Name</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">New Price</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid Price</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Savings</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach (var item in comparisons)
-                    {
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">@item.PartName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">$@item.NewPrice.ToString("N2")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">$@item.ActualPaidPrice.ToString("N2")</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-green-600 font-medium">$@item.Savings.ToString("N2")</span>
-                                <span class="text-green-500 text-sm ml-1">(@item.SavingsPercentage.ToString("N0")%)</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">@item.Source</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <button @onclick="() => DeleteEntry(item)"
-                                        class="text-red-600 hover:text-red-800 font-medium transition-colors duration-150">
-                                    Delete
-                                </button>
-                            </td>
+        @if (isLoading)
+        {
+            <div class="flex justify-center items-center h-48">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        }
+        else if (!FilteredComparisons().Any())
+        {
+            <div class="bg-white rounded-lg shadow-sm p-8 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No parts found</h3>
+                <p class="text-gray-500 mb-4">@(string.IsNullOrEmpty(searchTerm) ? "Start by adding your first part" : "Try adjusting your search")</p>
+                @if (string.IsNullOrEmpty(searchTerm))
+                {
+                    <button @onclick="AddNewEntry" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                        Add Your First Part
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Table Section -->
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Part Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">New Price</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Paid Price</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Savings</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Source</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @foreach (var item in FilteredComparisons())
+                        {
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">@item.PartName</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">$@item.NewPrice.ToString("N2")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">$@item.ActualPaidPrice.ToString("N2")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                    <span class="text-green-600 font-medium">$@item.Savings.ToString("N2")</span>
+                                    <span class="text-green-500 text-sm">(@item.SavingsPercentage.ToString("N0")%)</span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@item.Source</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                    <button @onclick="() => DeleteEntry(item)"
+                                            class="text-red-600 hover:text-red-800 font-medium">
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
+    <!-- Add/Edit Dialog -->
     @if (showDialog)
     {
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
-            <div class="bg-white rounded-xl shadow-lg p-6 w-96 max-w-[90vw]">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Add New Part</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96 max-w-[90vw]">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Add New Part</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Part Name</label>
                         <input @bind="newItem.PartName"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">New Price ($)</label>
                         <input type="number" step="0.01" @bind="newItem.NewPrice"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Actual Paid Price ($)</label>
                         <input type="number" step="0.01" @bind="newItem.ActualPaidPrice"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
                         <input @bind="newItem.Source"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                         <textarea @bind="newItem.Notes" rows="3"
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"></textarea>
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
                     <button @onclick="CloseDialog"
-                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200">
+                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
                         Cancel
                     </button>
                     <button @onclick="SaveEntry"
-                            class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow">
+                            class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg">
                         Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Delete Confirmation Dialog -->
+    @if (showDeleteConfirmation)
+    {
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-md">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Confirm Delete</h3>
+                <p class="text-gray-500 mb-4">Are you sure you want to delete this part? This action cannot be undone.</p>
+                <div class="flex justify-end gap-3">
+                    <button @onclick="CancelDelete" class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        Cancel
+                    </button>
+                    <button @onclick="ConfirmDelete" class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg">
+                        Delete
                     </button>
                 </div>
             </div>
@@ -128,19 +183,17 @@
     }
 </div>
 
-@code {
-    // ... existing code remains the same ...
-}
-
-@code {
-    // ... existing code remains the same ...
-}
 
 @code {
     private MiataProjectTrackerContext context = default!;
     private List<PriceComparison> comparisons = new();
     private bool showDialog = false;
+    private bool showDeleteConfirmation = false;
+    private bool isLoading = true;
     private PriceComparison newItem = new();
+    private PriceComparison itemToDelete = null;
+    private string searchTerm = "";
+    private string sortOption = "name";
 
     private decimal totalNewPrice => comparisons.Sum(x => x.NewPrice);
     private decimal totalPaidPrice => comparisons.Sum(x => x.ActualPaidPrice);
@@ -153,6 +206,30 @@
     {
         context = await DbFactory.CreateDbContextAsync();
         await LoadComparisons();
+        isLoading = false;
+    }
+
+    private IEnumerable<PriceComparison> FilteredComparisons()
+    {
+        var filtered = comparisons.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filtered = filtered.Where(x =>
+                x.PartName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                x.Source.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filtered = sortOption switch
+        {
+            "name" => filtered.OrderBy(x => x.PartName),
+            "savings" => filtered.OrderByDescending(x => x.Savings),
+            "price" => filtered.OrderByDescending(x => x.NewPrice),
+            "source" => filtered.OrderBy(x => x.Source),
+            _ => filtered
+        };
+
+        return filtered;
     }
 
     private async Task LoadComparisons()
@@ -183,11 +260,28 @@
         newItem = new();
     }
 
-    private async Task DeleteEntry(PriceComparison item)
+    private void DeleteEntry(PriceComparison item)
     {
-        context.PriceComparison.Remove(item);
-        await context.SaveChangesAsync();
-        await LoadComparisons();
+        itemToDelete = item;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+        itemToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (itemToDelete != null)
+        {
+            context.PriceComparison.Remove(itemToDelete);
+            await context.SaveChangesAsync();
+            await LoadComparisons();
+        }
+        showDeleteConfirmation = false;
+        itemToDelete = null;
     }
 
     public async ValueTask DisposeAsync()
