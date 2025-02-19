@@ -9,11 +9,14 @@ namespace MiataProjectTracker.Data
 {
     public class MiataProjectTrackerContext : DbContext
     {
-        public MiataProjectTrackerContext (DbContextOptions<MiataProjectTrackerContext> options)
+        public MiataProjectTrackerContext(DbContextOptions<MiataProjectTrackerContext> options)
             : base(options)
         {
         }
 
         public DbSet<MiataProjectTracker.Models.Parts> Parts { get; set; } = default!;
+        public DbSet<MiataProjectTracker.Models.BuildLog> BuildLog { get; set; } = default!;
+        public DbSet<MiataProjectTracker.Models.PriceComparison> PriceComparison { get; set; } = default!;
+        public DbSet<MiataProjectTracker.Models.BuildTasks> BuildTasks { get; set; } = default!;
     }
 }

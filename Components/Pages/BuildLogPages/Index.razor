@@ -1,0 +1,61 @@
+﻿@page "/buildlog"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@using MiataProjectTracker.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+
+<PageTitle>Build Log</PageTitle>
+
+<div class="p-4 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Build Log</h1>
+            <a href="buildlog/create" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Create New Entry
+            </a>
+        </div>
+
+        <div class="space-y-4">
+            @foreach (var entry in context.BuildLog.OrderByDescending(b => b.Date))
+            {
+                <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h2 class="text-xl font-semibold text-gray-800">@entry.Title</h2>
+                        <div class="text-sm text-gray-500">
+                            @(entry.Date?.ToString("MMM dd, yyyy"))
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
+                            @entry.Tag
+                        </span>
+                    </div>
+
+                    <p class="text-gray-600 mb-4">@entry.Summary</p>
+
+                    <div class="flex gap-3 text-sm">
+                        <a href="@($"buildlog/details?id={entry.Id}")"
+                           class="text-blue-600 hover:text-blue-800">View Details</a>
+                        <a href="@($"buildlog/edit?id={entry.Id}")"
+                           class="text-gray-600 hover:text-gray-800">Edit</a>
+                        <a href="@($"buildlog/delete?id={entry.Id}")"
+                           class="text-red-600 hover:text-red-800">Delete</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private MiataProjectTrackerContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

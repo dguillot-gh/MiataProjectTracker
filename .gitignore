@@ -362,3 +362,11 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db
+/MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db-shm
+/MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db-wal
+/.vscode
+/Migrations/20250216022351_addingtimelinetracking.cs
+/Migrations/20250216022351_addingtimelinetracking.Designer.cs
+/Migrations/20250216022624_timelineupdate.cs
+/Migrations/20250216022624_timelineupdate.Designer.cs
+/Migrations/MiataProjectTrackerContextModelSnapshot.cs

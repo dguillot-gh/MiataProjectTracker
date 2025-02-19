@@ -1,0 +1,104 @@
+﻿@page "/buildlog/edit"
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>BuildLog</h2>
+<hr />
+@if (BuildLog is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="BuildLog" OnValidSubmit="UpdateBuildLog" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="BuildLog.Id" value="@BuildLog.Id" />
+                <div class="mb-3">
+                    <label for="tag" class="form-label">Tag:</label>
+                    <InputText id="tag" @bind-Value="BuildLog.Tag" class="form-control" aria-required="true"/>
+                    <ValidationMessage For="() => BuildLog.Tag" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="BuildLog.Title" class="form-control" aria-required="true"/>
+                    <ValidationMessage For="() => BuildLog.Title" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="summary" class="form-label">Summary:</label>
+                    <InputText id="summary" @bind-Value="BuildLog.Summary" class="form-control" aria-required="true"/>
+                    <ValidationMessage For="() => BuildLog.Summary" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date:</label>
+                    <InputDate id="date" @bind-Value="BuildLog.Date" class="form-control" />
+                    <ValidationMessage For="() => BuildLog.Date" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/buildlog">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private BuildLog? BuildLog { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        BuildLog ??= await context.BuildLog.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (BuildLog is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateBuildLog()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(BuildLog!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!BuildLogExists(BuildLog!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/buildlog");
+    }
+
+    private bool BuildLogExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.BuildLog.Any(e => e.Id == id);
+    }
+}
