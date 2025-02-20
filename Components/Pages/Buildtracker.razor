@@ -5,9 +5,9 @@
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 
-<!-- Improved top bar with search -->
+<!-- Improved top bar with search and sort -->
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-    <h1 style="margin: 0;">Turbo Build Progress Tracker</h1>
+    <h1 style="margin: 0;">Progress Tracker</h1>
     <div style="display: flex; gap: 10px; align-items: center;">
         <input type="text"
                placeholder="Search tasks..."
@@ -21,16 +21,39 @@
                 <option value="@category">@category</option>
             }
         </select>
+        <select @bind="sortOption" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+            <option value="title">Sort by Title</option>
+            <option value="category">Sort by Category</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+        </select>
         <button @onclick="AddNewTask" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <span style="margin-right: 5px;">+</span> New Task
         </button>
     </div>
 </div>
 
+<!-- Progress Bar -->
+<div style="margin-bottom: 20px; background-color: #f0f0f0; border-radius: 5px; padding: 15px;">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+        <span>Overall Progress</span>
+        <span>@progressPercentage%</span>
+    </div>
+    <div style="background-color: #ddd; height: 10px; border-radius: 5px; overflow: hidden;">
+        <div style="background-color: #28a745; height: 100%; width: @progressPercentage%; transition: width 0.3s ease;">
+        </div>
+    </div>
+</div>
+
 <div class="columns-container" style="display: flex; gap: 20px;">
     <!-- Not Started -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>Not Started</h2>
+        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            Not Started
+            <span style="background-color: #666; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                @FilteredTasks().Count(t => t.Status == "Not Started")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "Not Started"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
@@ -67,7 +90,12 @@
 
     <!-- In Progress -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>In Progress</h2>
+        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            In Progress
+            <span style="background-color: #666; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                @FilteredTasks().Count(t => t.Status == "In Progress")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "In Progress"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
@@ -104,7 +132,12 @@
 
     <!-- Done -->
     <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>Done</h2>
+        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            Done
+            <span style="background-color: #666; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em;">
+                @FilteredTasks().Count(t => t.Status == "Done")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "Done"))
         {
             <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
@@ -249,6 +282,10 @@
     private BuildTasks editingTask = new();
     private string selectedCategory = "";
     private string searchTerm = "";
+    private string sortOption = "title";
+    private int progressPercentage => tasks.Count > 0
+        ? (int)((float)tasks.Count(t => t.Status == "Done") / tasks.Count * 100)
+        : 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -272,6 +309,16 @@
                 t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
+        // Add sorting
+        filtered = sortOption switch
+        {
+            "title" => filtered.OrderBy(t => t.Title),
+            "category" => filtered.OrderBy(t => t.Category),
+            "newest" => filtered.OrderByDescending(t => t.Id),
+            "oldest" => filtered.OrderBy(t => t.Id),
+            _ => filtered
+        };
+
         return filtered;
     }
 
@@ -287,7 +334,7 @@
     private void AddNewTask()
     {
         showAddDialog = true;
-        newTask = new BuildTasks { Status = "Not Started", Category = "Other" };
+        newTask = new BuildTasks { Status = "Not Started" };
     }
 
     private async Task SaveNewTask()
