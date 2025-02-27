@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MiataProjectTracker.Migrations
 {
     [DbContext(typeof(MiataProjectTrackerContext))]
-    [Migration("20250219214831_toprod")]
-    partial class toprod
+    [Migration("20250227000257_buildtasks")]
+    partial class buildtasks
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,6 +52,9 @@ namespace MiataProjectTracker.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("ArchivedDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -59,6 +62,9 @@ namespace MiataProjectTracker.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("PartsAcquired")
                         .HasColumnType("INTEGER");
