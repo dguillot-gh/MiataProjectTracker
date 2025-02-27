@@ -8,9 +8,11 @@
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Parts Inventory</PageTitle>
 
-<h1 style="text-align: center;">Parts Finder</h1>
+<div class="page-header">
+    <h1>Parts Inventory</h1>
+</div>
 
 <div class="search-container">
     <div class="search-box">
@@ -18,76 +20,290 @@
                placeholder="Search parts..."
                @bind="partFilter"
                @bind:event="oninput"
-               class="form-control" />
-        <select @bind="searchField" class="form-select">
+               class="form-control search-input" />
+        <select @bind="searchField" class="form-select search-select">
             <option value="name">Name</option>
             <option value="number">Part Number</option>
             <option value="all">All Fields</option>
         </select>
     </div>
-    <a href="parts/create" class="btn btn-success">Create New</a>
+    <div class="action-buttons">
+        <div class="view-toggle">
+            <button class="btn @(isGridView ? "btn-primary" : "btn-outline-primary")" @onclick="() => isGridView = true">
+                <i class="fas fa-th"></i> Grid
+            </button>
+            <button class="btn @(!isGridView ? "btn-primary" : "btn-outline-primary")" @onclick="() => isGridView = false">
+                <i class="fas fa-table"></i> Table
+            </button>
+        </div>
+        <a href="parts/create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add New Part
+        </a>
+    </div>
 </div>
 
 @if (isLoading)
 {
-    <div class="loading-spinner">Loading...</div>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading parts inventory...</p>
+    </div>
 }
 else if (error != null)
 {
-    <div class="alert alert-danger">@error</div>
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i>
+        @error
+    </div>
 }
 else
 {
-    <div class="grid-container">
-        <QuickGrid Class="table table-striped table-hover" Items="filteredParts" Pagination="pagination">
-            <PropertyColumn Property="parts => parts.PartName"
-                            Title="Part Name"
-                            Sortable="true" />
-            <PropertyColumn Property="parts => parts.PartNumber"
-                            Title="Part Number"
-                            Sortable="true" />
-            <PropertyColumn Property="parts => parts.PartStatus"
-                            Title="Status"
-                            Sortable="true" />
-            <PropertyColumn Property="parts => parts.PartCost"
-                            Title="Cost"
-                            Format="{0:C}" />
-            <TemplateColumn Title="Actions">
-                <div class="btn-group">
-                    <a class="btn btn-sm btn-primary" href="@($"parts/edit?id={context.Id}")">Edit</a>
-                    <a class="btn btn-sm btn-info" href="@($"parts/details?id={context.Id}")">Details</a>
-                    <a class="btn btn-sm btn-danger" href="@($"parts/delete?id={context.Id}")">Delete</a>
+    @if (isGridView)
+    {
+        <div class="parts-grid">
+            @foreach (var part in filteredParts)
+            {
+                <div class="part-card">
+                    <div class="part-header">
+                        <h3>@part.PartName</h3>
+                        <span class="status-badge @GetStatusClass(part.PartStatus)">
+                            @part.PartStatus
+                        </span>
+                    </div>
+                    <div class="part-details">
+                        @if (!string.IsNullOrEmpty(part.PartNumber))
+                        {
+                            <p><strong>Part Number:</strong> @part.PartNumber</p>
+                        }
+                        @if (part.PartCost.HasValue)
+                        {
+                            <p><strong>Cost:</strong> @part.PartCost?.ToString("C")</p>
+                        }
+                    </div>
+                    <div class="part-actions">
+                        <a class="btn btn-primary" href="@($"parts/edit?id={part.Id}")">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a class="btn btn-info" href="@($"parts/details?id={part.Id}")">
+                            <i class="fas fa-info-circle"></i> Details
+                        </a>
+                        <a class="btn btn-danger" href="@($"parts/delete?id={part.Id}")">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
                 </div>
-            </TemplateColumn>
-        </QuickGrid>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="grid-container">
+            <QuickGrid Class="table table-striped table-hover" Items="@filteredParts" Pagination="@pagination">
+                <PropertyColumn Property="@(p => p.PartName)"
+                              Title="Part Name"
+                              Sortable="true" />
+                <PropertyColumn Property="@(p => p.PartNumber)"
+                              Title="Part Number"
+                              Sortable="true" />
+                <PropertyColumn Property="@(p => p.PartStatus)"
+                              Title="Status"
+                              Sortable="true">
+                </PropertyColumn>
+                <PropertyColumn Property="@(p => p.PartCost)"
+                              Title="Cost"
+                              Format="{0:C}" />
+                <TemplateColumn Title="Actions">
+                    <div class="btn-group">
+                        <a class="btn btn-primary" href="@($"parts/edit?id={context.Id}")">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a class="btn btn-info" href="@($"parts/details?id={context.Id}")">
+                            <i class="fas fa-info-circle"></i> Details
+                        </a>
+                        <a class="btn btn-danger" href="@($"parts/delete?id={context.Id}")">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                    </div>
+                </TemplateColumn>
+            </QuickGrid>
+        </div>
+    }
+
+    <div class="pagination-container">
+        <Paginator State="@pagination" />
     </div>
 }
 
-<Paginator State="pagination" />
-
 <style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .page-header h1 {
+        margin: 0;
+        color: #2d3748;
+    }
+
     .search-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
-        padding: 1rem;
+        gap: 1rem;
     }
 
     .search-box {
         display: flex;
         gap: 1rem;
         flex: 1;
-        max-width: 500px;
+        max-width: 600px;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .search-input {
+        border: none;
+        outline: none;
+        padding: 0.5rem;
+        flex: 1;
+    }
+
+    .search-select {
+        border: none;
+        background: #f1f3f5;
+        padding: 0.5rem;
+        border-radius: 4px;
+        min-width: 120px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .parts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+
+    .part-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .part-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .part-header h3 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.25rem;
+        word-break: break-word;
+        max-width: 70%;
+    }
+
+    .part-details {
+        margin-bottom: 1rem;
+    }
+
+    .part-details p {
+        margin: 0.5rem 0;
+        color: #4a5568;
+    }
+
+    .part-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.5rem 1rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .status-acquired {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-needed {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-default {
+        background-color: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem;
+        gap: 1rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
     }
 
     .grid-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         overflow-x: auto;
     }
 
-    .loading-spinner {
-        text-align: center;
-        padding: 2rem;
+    .pagination-container {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
     }
 </style>
 
@@ -96,18 +312,29 @@ else
     private string searchField = "name";
     private bool isLoading = true;
     private string? error;
+    private bool isGridView = false;
     private MiataProjectTrackerContext context = default!;
     private PaginationState pagination = new() { ItemsPerPage = 10 };
 
     private IQueryable<Parts> filteredParts => searchField switch
     {
-        "name" => context.Parts.Where(m => m.PartName.Contains(partFilter)),
-        "number" => context.Parts.Where(m => m.PartNumber.Contains(partFilter)),
-        "all" => context.Parts.Where(m =>
-            m.PartName.Contains(partFilter) ||
-            m.PartNumber.Contains(partFilter) ||
-            m.PartStatus.Contains(partFilter)),
-        _ => context.Parts
+        "name" => context.Parts.Where(p => 
+            p.PartName != null && 
+            p.PartName.Contains(partFilter)).OrderByDescending(p => p.Id),
+        "number" => context.Parts.Where(p => 
+            p.PartNumber != null && 
+            p.PartNumber.Contains(partFilter)).OrderByDescending(p => p.Id),
+        "all" => context.Parts.Where(p =>
+            (p.PartName != null && p.PartName.Contains(partFilter)) ||
+            (p.PartNumber != null && p.PartNumber.Contains(partFilter))).OrderByDescending(p => p.Id),
+        _ => context.Parts.OrderByDescending(p => p.Id)
+    };
+
+    private string GetStatusClass(string? status) => status?.ToLower() switch
+    {
+        "accquired" => "status-acquired",
+        "needed" => "status-needed",
+        _ => "status-default"
     };
 
     protected override async Task OnInitializedAsync()
