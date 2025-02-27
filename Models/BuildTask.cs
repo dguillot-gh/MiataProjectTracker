@@ -23,5 +23,7 @@ namespace MiataProjectTracker.Models
 
         public bool PartsNeeded { get; set; } = false;
         public bool PartsAcquired { get; set; } = false;
+        public bool IsArchived { get; set; }
+        public DateTime? ArchivedDate { get; set; }
     }
 }
