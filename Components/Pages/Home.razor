@@ -2,114 +2,171 @@
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using MiataProjectTracker.Models
-@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@using MiataProjectTracker.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MiataProjectTrackerContext> DbFactory
+
+<PageTitle>Dashboard - Miata Project Tracker</PageTitle>
 
 <div class="page-container">
     <div class="page-header">
         <h1>Miata Project Tracker</h1>
-        <p class="subtitle">Keep track of your build progress and parts</p>
+        <p class="subtitle">Build Progress Overview</p>
     </div>
 
-    <div class="stats-grid">
-        <div class="stats-card text-center">
-            <h3>Total Parts</h3>
-            <p class="stats-value">@totalParts</p>
-        </div>
-        <div class="stats-card text-center">
-            <h3>Build Entries</h3>
-            <p class="stats-value">@totalBuildLogs</p>
-        </div>
-        <div class="stats-card text-center">
-            <h3>Parts Value</h3>
-            <p class="stats-value">$@totalPartsValue.ToString("N2")</p>
-        </div>
-    </div>
-
-    <div class="summary-card">
-        <h2 class="text-center">Build Summary</h2>
-        <div class="summary-grid">
-            <div class="summary-section">
-                <h3 class="text-center">Vehicle Details</h3>
-                <div class="details-list">
-                    <div class="detail-item">
-                        <span class="detail-label">Year:</span>
-                        <span class="detail-value">1995</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Model:</span>
-                        <span class="detail-value">Miata NA</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Color:</span>
-                        <span class="detail-value">Classic Red</span>
-                    </div>
+    <div class="dashboard-layout">
+        <!-- Main Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card total-parts">
+                <div class="stat-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Parts</h3>
+                    <p class="stat-value">@totalParts</p>
                 </div>
             </div>
-            <div class="summary-section">
-                <h3 class="text-center">Current Mods</h3>
-                <div class="details-list">
-                    <div class="detail-item">
-                        <span class="detail-label">Engine:</span>
-                        <span class="detail-value">Stock 1.8L</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Suspension:</span>
-                        <span class="detail-value">Coilovers</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Wheels:</span>
-                        <span class="detail-value">15x8 RPF1</span>
-                    </div>
+
+            <div class="stat-card total-cost">
+                <div class="stat-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Investment</h3>
+                    <p class="stat-value">@totalCost.ToString("C2")</p>
+                </div>
+            </div>
+
+            <div class="stat-card parts-needed">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Parts Needed</h3>
+                    <p class="stat-value">@partsNeeded</p>
+                </div>
+            </div>
+
+            <div class="stat-card parts-acquired">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Parts Acquired</h3>
+                    <p class="stat-value">@partsAcquired</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="recent-activities-card">
-        <h2 class="text-center">Recent Build Tasks</h2>
-        <div class="activities-list">
-            @if (recentActivities.Any())
-            {
-                @foreach (var activity in recentActivities)
-                {
-                    <div class="activity-item">
-                        <div class="activity-icon @activity.Type.ToLower()">
-                            @GetActivityIcon(activity.Type)
+        <!-- Two Column Layout -->
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div class="content-column">
+                <div class="dashboard-card vehicle-details">
+                    <h3><i class="fas fa-car"></i> Vehicle Information</h3>
+                    <div class="details-list">
+                        <div class="detail-item">
+                            <span class="detail-label">Year:</span>
+                            <span class="detail-value">1995</span>
                         </div>
-                        <div class="activity-content">
-                            <p class="activity-title">@activity.Title</p>
-                            <p class="activity-date">@activity.Date.ToString("MMM dd, yyyy")</p>
+                        <div class="detail-item">
+                            <span class="detail-label">Model:</span>
+                            <span class="detail-value">Miata NA</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Color:</span>
+                            <span class="detail-value">Classic Red</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Engine:</span>
+                            <span class="detail-value">Stock 1.8L</span>
                         </div>
                     </div>
-                }
-            }
-            else
-            {
-                <p class="no-activities">No recent tasks</p>
-            }
-        </div>
-    </div>
+                </div>
 
-    <div class="nav-grid">
-        <a href="/buildlog" class="nav-card">
-            <h2>Build Timeline</h2>
-            <p>Track your project progress and tasks</p>
-        </a>
-        <a href="/pricetracker" class="nav-card">
-            <h2>Price Tracker</h2>
-            <p>Monitor your parts and savings</p>
-        </a>
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-chart-pie"></i> Cost Breakdown</h3>
+                    <div class="cost-summary">
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Acquired Parts</span>
+                                <span>@acquiredCost.ToString("C2")</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar acquired"
+                                     style="width: @(totalCost > 0 ? (acquiredCost/totalCost * 100).ToString("F0") : "0")%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Needed Parts</span>
+                                <span>@neededCost.ToString("C2")</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar needed"
+                                     style="width: @(totalCost > 0 ? (neededCost/totalCost * 100).ToString("F0") : "0")%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="content-column">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-history"></i> Recent Activities</h3>
+                    <div class="activities-list">
+                        @foreach (var part in recentParts)
+                        {
+                            <div class="activity-item">
+                                <div class="activity-icon @GetStatusClass(part.PartStatus)">
+                                    <i class="fas @(part.PartStatus?.ToLower() == "accquired" ? "fa-check" : "fa-clock")"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-header">
+                                        <span class="activity-title">@part.PartName</span>
+                                        <span class="activity-cost">@(part.PartCost?.ToString("C2") ?? "-")</span>
+                                    </div>
+                                    <div class="activity-details">
+                                        <span class="status-badge @GetStatusClass(part.PartStatus)">
+                                            @part.PartStatus
+                                        </span>
+                                        @if (!string.IsNullOrEmpty(part.PartNumber))
+                                        {
+                                            <span class="part-number">@part.PartNumber</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-tasks"></i> Build Log Summary</h3>
+                    <div class="build-log-list">
+                        @foreach (var log in recentBuildLogs)
+                        {
+                            <div class="build-log-item">
+                                <div class="build-log-content">
+                                    <span class="build-log-title">@log.Title</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
     .page-container {
         padding: 2rem;
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
-        background-color: #1a202c;
-        color: #e2e8f0;
-        min-height: 100vh;
     }
 
     .page-header {
@@ -121,112 +178,153 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-        .page-header h1 {
-            margin: 0;
-            color: #e2e8f0;
-            font-size: 2rem;
-            font-weight: bold;
-        }
+    .page-header h1 {
+        margin: 0;
+        color: #e2e8f0;
+        font-size: 2rem;
+    }
 
     .subtitle {
         color: #a0aec0;
         margin-top: 0.5rem;
-        font-size: 1.1rem;
     }
 
-    .text-center {
-        text-align: center;
+    .dashboard-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
     }
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 2rem;
     }
 
-    .stats-card {
-        background: #2d3748;
-        padding: 1.5rem;
+    .stat-card {
+        background-color: #2d3748;
         border-radius: 8px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease;
     }
 
-        .stats-card h3 {
-            color: #a0aec0;
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
 
-    .stats-value {
-        color: #e2e8f0;
+    .stat-icon {
+        background-color: #4a5568;
+        border-radius: 8px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 1.5rem;
-        font-weight: bold;
+        color: #e2e8f0;
+    }
+
+    .stat-content h3 {
+        color: #a0aec0;
+        font-size: 0.875rem;
         margin: 0;
     }
 
-    .summary-card {
-        background: #2d3748;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        margin-bottom: 2rem;
+    .stat-value {
+        color: #e2e8f0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0.25rem 0 0 0;
     }
 
-        .summary-card h2 {
-            color: #e2e8f0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-        }
-
-    .summary-grid {
+    .content-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
     }
 
-    .summary-section h3 {
+    .content-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .dashboard-card {
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .dashboard-card h3 {
+        color: #e2e8f0;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .dashboard-card h3 i {
         color: #a0aec0;
-        font-size: 1rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
     }
 
     .details-list {
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 1rem;
     }
 
     .detail-item {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #4a5568;
+        padding: 0.75rem;
+        background-color: #1a202c;
+        border-radius: 6px;
     }
 
     .detail-label {
         color: #a0aec0;
-        font-weight: 500;
     }
 
     .detail-value {
         color: #e2e8f0;
-        font-weight: 600;
+        font-weight: 500;
     }
 
-    .recent-activities-card {
-        background: #2d3748;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        margin-bottom: 2rem;
+    .progress-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        color: #e2e8f0;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress {
+        background-color: #1a202c;
+        border-radius: 999px;
+        height: 0.75rem;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-bar.acquired {
+        background-color: #065f46;
+    }
+
+    .progress-bar.needed {
+        background-color: #92400e;
     }
 
     .activities-list {
@@ -237,163 +335,198 @@
 
     .activity-item {
         display: flex;
-        align-items: center;
         gap: 1rem;
         padding: 1rem;
-        border-bottom: 1px solid #4a5568;
-        text-align: left;
+        background-color: #1a202c;
+        border-radius: 8px;
+        align-items: center;
     }
 
     .activity-icon {
         width: 40px;
         height: 40px;
-        border-radius: 50%;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
+        font-size: 1rem;
     }
 
-        .activity-icon.part {
-            background-color: #2c5282;
-            color: #90cdf4;
-        }
+    .activity-icon.status-acquired {
+        background-color: #065f46;
+        color: #d1fae5;
+    }
 
-        .activity-icon.build {
-            background-color: #276749;
-            color: #9ae6b4;
-        }
+    .activity-icon.status-needed {
+        background-color: #92400e;
+        color: #fef3c7;
+    }
 
     .activity-content {
         flex: 1;
     }
 
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
     .activity-title {
-        margin: 0;
         color: #e2e8f0;
         font-weight: 500;
     }
 
-    .activity-date {
-        margin: 0;
+    .activity-cost {
+        color: #a0aec0;
+    }
+
+    .activity-details {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-badge.status-acquired {
+        background-color: #065f46;
+        color: #d1fae5;
+    }
+
+    .status-badge.status-needed {
+        background-color: #92400e;
+        color: #fef3c7;
+    }
+
+    .part-number {
         color: #a0aec0;
         font-size: 0.875rem;
     }
 
-    .no-activities {
-        text-align: center;
-        color: #a0aec0;
-        padding: 2rem;
+    .build-log-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
-    .nav-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        text-align: center;
-    }
-
-    .nav-card {
-        background: #2d3748;
-        padding: 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        text-align: center;
-    }
-
-        .nav-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            background: #364154;
-        }
-
-        .nav-card h2 {
-            color: #e2e8f0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-card p {
-            color: #a0aec0;
-            font-size: 0.875rem;
-            margin: 0;
-        }
-
-    {
+    .build-log-item {
+        display: flex;
+        gap: 1rem;
         padding: 1rem;
+        background-color: #1a202c;
+        border-radius: 8px;
     }
 
-    .summary-grid {
-        grid-template-columns: 1fr;
+    .build-log-date {
+        color: #a0aec0;
+        font-size: 0.875rem;
+        min-width: 70px;
     }
 
-    .nav-grid {
-        grid-template-columns: 1fr;
+    .build-log-content {
+        flex: 1;
     }
 
+    .build-log-title {
+        color: #e2e8f0;
+        font-weight: 500;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .build-log-description {
+        color: #a0aec0;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
     }
 </style>
 
 @code {
-    // ... existing code remains the same ...
-}
-@code {
+    private MiataProjectTrackerContext context = default!;
     private int totalParts;
-    private int totalBuildLogs;
-    private decimal totalPartsValue;
-    private List<RecentActivity> recentActivities = new();
+    private decimal totalCost;
+    private int partsNeeded;
+    private int partsAcquired;
+    private decimal acquiredCost;
+    private decimal neededCost;
+    private List<Parts> recentParts = new();
+    private List<BuildLog> recentBuildLogs = new();
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
+        try
+        {
+            context = await DbFactory.CreateDbContextAsync();
 
-        // Get total counts and values
-        totalParts = await context.Parts.CountAsync();
-        totalBuildLogs = await context.BuildLog.CountAsync();
-        totalPartsValue = await context.Parts.SumAsync(p => p.PartCost ?? 0);
+            // Calculate statistics
+            totalParts = await context.Parts.CountAsync();
+            totalCost = await context.Parts
+                .Where(p => p.PartCost.HasValue)
+                .SumAsync(p => p.PartCost.Value);
 
-        // Get recent activities (combining parts and build logs)
-        var recentParts = await context.Parts
-            .OrderByDescending(p => p.Id)
-            .Take(5)
-            .Select(p => new RecentActivity
-                {
-                    Title = p.PartName,
-                    Date = DateTime.Now, // You might want to add DateAdded to your Parts model
-                    Type = "Part"
-                })
-            .ToListAsync();
+            partsNeeded = await context.Parts.CountAsync(p =>
+                p.PartStatus != null && p.PartStatus.ToLower() == "needed");
+            partsAcquired = await context.Parts.CountAsync(p =>
+                p.PartStatus != null && p.PartStatus.ToLower() == "accquired");
 
-        var recentBuildLogs = await context.BuildLog
-            .OrderByDescending(b => b.Date)
-            .Take(5)
-            .Select(b => new RecentActivity
-                {
-                    Title = b.Title,
-                    Type = "Build"
-                })
-            .ToListAsync();
+            acquiredCost = await context.Parts
+                .Where(p => p.PartStatus != null &&
+                           p.PartStatus.ToLower() == "accquired" &&
+                           p.PartCost.HasValue)
+                .SumAsync(p => p.PartCost.Value);
 
-        recentActivities = recentParts.Concat(recentBuildLogs)
-            .OrderByDescending(a => a.Date)
-            .Take(5)
-            .ToList();
+            neededCost = await context.Parts
+                .Where(p => p.PartStatus != null &&
+                           p.PartStatus.ToLower() == "needed" &&
+                           p.PartCost.HasValue)
+                .SumAsync(p => p.PartCost.Value);
+
+            // Get recent parts
+            recentParts = await context.Parts
+                .OrderByDescending(p => p.Id)
+                .Take(5)
+                .ToListAsync();
+
+            // Get recent build logs
+            recentBuildLogs = await context.BuildLog
+                .OrderByDescending(b => b.Date)
+                .Take(5)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+            // You might want to add error handling UI here
+        }
     }
 
-    private string GetActivityIcon(string type) => type switch
+    private string GetStatusClass(string? status) => status?.ToLower() switch
     {
-        "Part" => "📦",
-        "Build" => "🔧",
-        _ => "📝"
+        "accquired" => "status-acquired",
+        "needed" => "status-needed",
+        _ => "status-default"
     };
 
-    private class RecentActivity
+    public async ValueTask DisposeAsync()
     {
-        public string Title { get; set; } = "";
-        public DateTime Date { get; set; }
-        public string Type { get; set; } = "";
+        if (context is not null)
+        {
+            await context.DisposeAsync();
+        }
     }
 }
