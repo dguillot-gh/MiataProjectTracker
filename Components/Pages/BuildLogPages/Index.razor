@@ -7,47 +7,153 @@
 
 <PageTitle>Build Log</PageTitle>
 
-<div class="p-4 bg-gray-100 min-h-screen">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Build Log</h1>
-            <a href="buildlog/create" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                Create New Entry
-            </a>
-        </div>
+<div class="page-header">
+    <h1>Build Log</h1>
+</div>
 
-        <div class="space-y-4">
-            @foreach (var entry in context.BuildLog.OrderByDescending(b => b.Date))
-            {
-                <div class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <h2 class="text-xl font-semibold text-gray-800">@entry.Title</h2>
-                        <div class="text-sm text-gray-500">
-                            @(entry.Date?.ToString("MMM dd, yyyy"))
-                        </div>
-                    </div>
+<div class="buildlog-container">
+    <div class="action-bar">
+        <a href="buildlog/create" class="btn btn-success">
+            <i class="fas fa-plus"></i> Create New Entry
+        </a>
+    </div>
 
-                    <div class="mb-3">
-                        <span class="inline-block bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">
-                            @entry.Tag
-                        </span>
-                    </div>
-
-                    <p class="text-gray-600 mb-4">@entry.Summary</p>
-
-                    <div class="flex gap-3 text-sm">
-                        <a href="@($"buildlog/details?id={entry.Id}")"
-                           class="text-blue-600 hover:text-blue-800">View Details</a>
-                        <a href="@($"buildlog/edit?id={entry.Id}")"
-                           class="text-gray-600 hover:text-gray-800">Edit</a>
-                        <a href="@($"buildlog/delete?id={entry.Id}")"
-                           class="text-red-600 hover:text-red-800">Delete</a>
-                    </div>
+    <div class="entries-container">
+        @foreach (var entry in context.BuildLog.OrderByDescending(b => b.Date))
+        {
+            <div class="entry-card">
+                <div class="entry-header">
+                    <h2 class="entry-title">@entry.Title</h2>
+                    <span class="entry-date">@(entry.Date?.ToString("MMM dd, yyyy"))</span>
                 </div>
-            }
-        </div>
+
+                <div class="entry-tag">
+                    <span class="tag-badge">@entry.Tag</span>
+                </div>
+
+                <p class="entry-summary">@entry.Summary</p>
+
+                <div class="entry-actions">
+                    <a href="@($"buildlog/details?id={entry.Id}")" class="btn btn-info">
+                        <i class="fas fa-info-circle"></i> Details
+                    </a>
+                    <a href="@($"buildlog/edit?id={entry.Id}")" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="@($"buildlog/delete?id={entry.Id}")" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+        }
     </div>
 </div>
+
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+    .buildlog-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .action-bar {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .entries-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .entry-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: box-shadow 0.2s;
+    }
+
+        .entry-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+    .entry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .entry-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .entry-date {
+        color: #718096;
+        font-size: 0.875rem;
+    }
+
+    .entry-tag {
+        margin-bottom: 1rem;
+    }
+
+    .tag-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: #ebf5ff;
+        color: #2b6cb0;
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .entry-summary {
+        color: #4a5568;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .entry-actions {
+        display: flex;
+        gap: 0.75rem;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 1rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+        .btn i {
+            font-size: 0.875rem;
+        }
+</style>
 
 @code {
     private MiataProjectTrackerContext context = default!;
