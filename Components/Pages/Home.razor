@@ -1,72 +1,392 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using MiataProjectTracker.Models
+@inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 
-<div class="min-h-screen bg-gray-50 p-8">
-    <div class="max-w-3xl mx-auto">
-        <!-- Welcome Card -->
-        <div class="bg-white rounded-xl shadow-sm p-8 mb-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Miata Project Tracker</h1>
-            <p class="text-gray-600">Keep track of your build progress and parts</p>
+<div class="page-container">
+    <div class="page-header">
+        <h1>Miata Project Tracker</h1>
+        <p class="subtitle">Keep track of your build progress and parts</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stats-card text-center">
+            <h3>Total Parts</h3>
+            <p class="stats-value">@totalParts</p>
         </div>
+        <div class="stats-card text-center">
+            <h3>Build Entries</h3>
+            <p class="stats-value">@totalBuildLogs</p>
+        </div>
+        <div class="stats-card text-center">
+            <h3>Parts Value</h3>
+            <p class="stats-value">$@totalPartsValue.ToString("N2")</p>
+        </div>
+    </div>
 
-        <!-- Build Summary Card -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Build Summary</h2>
-            <div class="grid grid-cols-2 gap-6">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Vehicle Details</h3>
-                    <dl class="space-y-2">
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Year:</dt>
-                            <dd class="text-gray-900 font-medium">1995</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Model:</dt>
-                            <dd class="text-gray-900 font-medium">Miata NA</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Color:</dt>
-                            <dd class="text-gray-900 font-medium">Classic Red</dd>
-                        </div>
-                    </dl>
+    <div class="summary-card">
+        <h2 class="text-center">Build Summary</h2>
+        <div class="summary-grid">
+            <div class="summary-section">
+                <h3 class="text-center">Vehicle Details</h3>
+                <div class="details-list">
+                    <div class="detail-item">
+                        <span class="detail-label">Year:</span>
+                        <span class="detail-value">1995</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Model:</span>
+                        <span class="detail-value">Miata NA</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Color:</span>
+                        <span class="detail-value">Classic Red</span>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 mb-2">Current Mods</h3>
-                    <dl class="space-y-2">
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Engine:</dt>
-                            <dd class="text-gray-900 font-medium">Stock 1.8L</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Suspension:</dt>
-                            <dd class="text-gray-900 font-medium">Coilovers</dd>
-                        </div>
-                        <div class="flex justify-between">
-                            <dt class="text-gray-600">Wheels:</dt>
-                            <dd class="text-gray-900 font-medium">15x8 RPF1</dd>
-                        </div>
-                    </dl>
+            </div>
+            <div class="summary-section">
+                <h3 class="text-center">Current Mods</h3>
+                <div class="details-list">
+                    <div class="detail-item">
+                        <span class="detail-label">Engine:</span>
+                        <span class="detail-value">Stock 1.8L</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Suspension:</span>
+                        <span class="detail-value">Coilovers</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Wheels:</span>
+                        <span class="detail-value">15x8 RPF1</span>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Navigation Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Timeline Card -->
-            <a href="/timeline" class="block">
-                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Build Timeline</h2>
-                    <p class="text-gray-600 text-sm">Track your project progress and tasks</p>
-                </div>
-            </a>
-
-            <!-- Price Tracker Card -->
-            <a href="/pricetracker" class="block">
-                <div class="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-2">Price Tracker</h2>
-                    <p class="text-gray-600 text-sm">Monitor your parts and savings</p>
-                </div>
-            </a>
+    <div class="recent-activities-card">
+        <h2 class="text-center">Recent Build Tasks</h2>
+        <div class="activities-list">
+            @if (recentActivities.Any())
+            {
+                @foreach (var activity in recentActivities)
+                {
+                    <div class="activity-item">
+                        <div class="activity-icon @activity.Type.ToLower()">
+                            @GetActivityIcon(activity.Type)
+                        </div>
+                        <div class="activity-content">
+                            <p class="activity-title">@activity.Title</p>
+                            <p class="activity-date">@activity.Date.ToString("MMM dd, yyyy")</p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="no-activities">No recent tasks</p>
+            }
         </div>
     </div>
+
+    <div class="nav-grid">
+        <a href="/buildlog" class="nav-card">
+            <h2>Build Timeline</h2>
+            <p>Track your project progress and tasks</p>
+        </a>
+        <a href="/pricetracker" class="nav-card">
+            <h2>Price Tracker</h2>
+            <p>Monitor your parts and savings</p>
+        </a>
+    </div>
 </div>
+
+<style>
+    .page-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+    .subtitle {
+        color: #4a5568;
+        margin-top: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .stats-card h3 {
+            color: #4a5568;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+    .stats-value {
+        color: #2d3748;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+        .summary-card h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .summary-section h3 {
+        color: #4a5568;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .details-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .detail-label {
+        color: #4a5568;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: #2d3748;
+        font-weight: 600;
+    }
+
+    .recent-activities-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .activities-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: left;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+        .activity-icon.part {
+            background-color: #ebf8ff;
+            color: #3182ce;
+        }
+
+        .activity-icon.build {
+            background-color: #f0fff4;
+            color: #38a169;
+        }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        margin: 0;
+        color: #2d3748;
+        font-weight: 500;
+    }
+
+    .activity-date {
+        margin: 0;
+        color: #718096;
+        font-size: 0.875rem;
+    }
+
+    .no-activities {
+        text-align: center;
+        color: #718096;
+        padding: 2rem;
+    }
+
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .nav-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+        .nav-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-card h2 {
+            color: #2d3748;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-card p {
+            color: #4a5568;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+    {
+        padding: 1rem;
+    }
+
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-grid {
+        grid-template-columns: 1fr;
+    }
+
+    }
+</style>
+
+@code {
+    private int totalParts;
+    private int totalBuildLogs;
+    private decimal totalPartsValue;
+    private List<RecentActivity> recentActivities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        // Get total counts and values
+        totalParts = await context.Parts.CountAsync();
+        totalBuildLogs = await context.BuildLog.CountAsync();
+        totalPartsValue = await context.Parts.SumAsync(p => p.PartCost ?? 0);
+
+        // Get recent activities (combining parts and build logs)
+        var recentParts = await context.Parts
+            .OrderByDescending(p => p.Id)
+            .Take(5)
+            .Select(p => new RecentActivity
+                {
+                    Title = p.PartName,
+                    Date = DateTime.Now, // You might want to add DateAdded to your Parts model
+                    Type = "Part"
+                })
+            .ToListAsync();
+
+        var recentBuildLogs = await context.BuildLog
+            .OrderByDescending(b => b.Date)
+            .Take(5)
+            .Select(b => new RecentActivity
+                {
+                    Title = b.Title,
+                    Type = "Build"
+                })
+            .ToListAsync();
+
+        recentActivities = recentParts.Concat(recentBuildLogs)
+            .OrderByDescending(a => a.Date)
+            .Take(5)
+            .ToList();
+    }
+
+    private string GetActivityIcon(string type) => type switch
+    {
+        "Part" => "📦",
+        "Build" => "🔧",
+        _ => "📝"
+    };
+
+    private class RecentActivity
+    {
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Type { get; set; } = "";
+    }
+}
