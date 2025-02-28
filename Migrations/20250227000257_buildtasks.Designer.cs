@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MiataProjectTracker.Migrations
 {
     [DbContext(typeof(MiataProjectTrackerContext))]
-    [Migration("20250216002942_sqlite_migration_596")]
-    partial class sqlite_migration_596
+    [Migration("20250227000257_buildtasks")]
+    partial class buildtasks
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,6 +44,45 @@ namespace MiataProjectTracker.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("BuildLog");
+                });
+
+            modelBuilder.Entity("MiataProjectTracker.Models.BuildTasks", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ArchivedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PartsAcquired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PartsNeeded")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BuildTasks");
                 });
 
             modelBuilder.Entity("MiataProjectTracker.Models.Parts", b =>

@@ -4,53 +4,141 @@
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Edit</PageTitle>
+<PageTitle>Edit Build Log Entry</PageTitle>
 
-<h1>Edit</h1>
+<div class="page-header">
+    <h1>Edit Build Log Entry</h1>
+</div>
 
-<h2>BuildLog</h2>
-<hr />
 @if (BuildLog is null)
 {
-    <p><em>Loading...</em></p>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading entry details...</p>
+    </div>
 }
 else
 {
-    <div class="row">
-        <div class="col-md-4">
+    <div class="edit-container">
+        <div class="edit-form-container">
             <EditForm method="post" Model="BuildLog" OnValidSubmit="UpdateBuildLog" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
+                <ValidationSummary role="alert" class="alert alert-danger" />
                 <input type="hidden" name="BuildLog.Id" value="@BuildLog.Id" />
-                <div class="mb-3">
-                    <label for="tag" class="form-label">Tag:</label>
-                    <InputText id="tag" @bind-Value="BuildLog.Tag" class="form-control" aria-required="true"/>
+
+                <div class="form-group mb-3">
+                    <label for="tag" class="form-label">Tags</label>
+                    <InputSelect id="tag" @bind-Value="BuildLog.Tag" class="form-select">
+                        <option value="">Select a Tag</option>
+                        @foreach (var tag in AllowedTags)
+                        {
+                            <option value="@tag">@(char.ToUpper(tag[0]) + tag[1..])</option>
+                        }
+                    </InputSelect>
                     <ValidationMessage For="() => BuildLog.Tag" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="title" class="form-label">Title:</label>
-                    <InputText id="title" @bind-Value="BuildLog.Title" class="form-control" aria-required="true"/>
+
+                <div class="form-group mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <InputText id="title" @bind-Value="BuildLog.Title" class="form-control" />
                     <ValidationMessage For="() => BuildLog.Title" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="summary" class="form-label">Summary:</label>
-                    <InputText id="summary" @bind-Value="BuildLog.Summary" class="form-control" aria-required="true"/>
+
+                <div class="form-group mb-3">
+                    <label for="summary" class="form-label">Summary</label>
+                    <InputTextArea id="summary" @bind-Value="BuildLog.Summary" class="form-control" rows="4" />
                     <ValidationMessage For="() => BuildLog.Summary" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="date" class="form-label">Date:</label>
+
+                <div class="form-group mb-3">
+                    <label for="date" class="form-label">Date</label>
                     <InputDate id="date" @bind-Value="BuildLog.Date" class="form-control" />
                     <ValidationMessage For="() => BuildLog.Date" class="text-danger" />
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="/buildlog" class="btn btn-secondary">Back to List</a>
+                </div>
             </EditForm>
         </div>
     </div>
 }
 
-<div>
-    <a href="/buildlog">Back to List</a>
-</div>
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+    .edit-container {
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .edit-form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.5rem;
+        transition: border-color 0.2s;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem;
+        gap: 1rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+    }
+</style>
 
 @code {
     [SupplyParameterFromQuery]
@@ -58,6 +146,23 @@ else
 
     [SupplyParameterFromForm]
     private BuildLog? BuildLog { get; set; }
+
+    private readonly List<string> AllowedTags = new()
+    {
+        "exhaust",
+        "turbo",
+        "engine",
+        "body",
+        "fuel",
+        "suspension",
+        "brakes",
+        "interior",
+        "exterior",
+        "wheels",
+        "intake",
+        "cooling",
+        "tuning"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -70,8 +175,6 @@ else
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateBuildLog()
     {
         using var context = DbFactory.CreateDbContext();

@@ -4,135 +4,501 @@
 @using MiataProjectTracker.ValidationAttributes
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
+@inject IJSRuntime JSRuntime
 
-<!-- Improved top bar with search -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-    <h1 style="margin: 0;">Turbo Build Progress Tracker</h1>
-    <div style="display: flex; gap: 10px; align-items: center;">
+<style>
+    /* Base styles */
+    .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    }
+
+    .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    }
+
+    .search-input, .filter-select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    }
+
+    .search-input {
+    min-width: 200px;
+    }
+
+    .add-button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    .plus-icon {
+    margin-right: 5px;
+    }
+
+    /* Progress bar */
+    .progress-container {
+    margin-bottom: 20px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    padding: 15px;
+    }
+
+    .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    }
+
+    .progress-bar-bg {
+    background-color: #ddd;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    }
+
+    .progress-bar-fill {
+    background-color: #28a745;
+    height: 100%;
+    transition: width 0.3s ease;
+    }
+
+    /* Columns and cards */
+    .columns-container {
+    display: flex;
+    gap: 20px;
+    }
+
+    .column {
+    flex: 1;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+    min-height: 300px;
+    }
+
+    .column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    .count-badge {
+    background-color: #666;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    }
+
+    .task-card {
+    background-color: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 3px;
+    cursor: grab;
+    transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .task-card:hover {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .task-card.dragging {
+    opacity: 0.5;
+    }
+
+    .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    }
+
+    .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    }
+
+    .category-badge {
+    font-size: 0.8em;
+    color: #666;
+    background-color: #eee;
+    padding: 2px 6px;
+    border-radius: 3px;
+    }
+
+    .edit-button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    }
+
+    .task-description {
+    margin: 5px 0;
+    }
+
+    .task-tags {
+    margin-bottom: 8px;
+    }
+
+    .tag {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-right: 5px;
+    }
+
+    .parts-needed {
+    background-color: #ffd700;
+    }
+
+    .parts-acquired {
+    background-color: #90EE90;
+    }
+
+    .action-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    }
+
+    /* Modal styles */
+    .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    }
+
+    .modal-dialog {
+    background-color: white;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-sm {
+    max-width: 300px;
+    }
+
+    .modal-content {
+    padding: 20px;
+    }
+
+    .modal-title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    }
+
+    .modal-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+    }
+
+    .modal-body {
+    margin-bottom: 15px;
+    }
+
+    .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    }
+
+    /* Form styles */
+    .form-group {
+    margin-bottom: 15px;
+    }
+
+    .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    }
+
+    .form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    }
+
+    .form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    }
+
+    .form-check-input {
+    margin-right: 8px;
+    }
+
+    .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    }
+
+    .primary-button {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    .secondary-button {
+    padding: 8px 16px;
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    .danger-button {
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    }
+
+    .text-danger {
+    color: #dc3545;
+    }
+
+    .validation-message {
+    color: #dc3545;
+    font-size: 0.8em;
+    margin-top: 5px;
+    }
+
+    .archive-button {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-left: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .archive-button:hover {
+        background-color: #5a6268;
+    }
+
+    .task-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    </style>
+
+<div class="top-bar">
+    <h1>Progress Tracker</h1>
+    <div class="controls">
         <input type="text"
-               placeholder="Search tasks..."
-               @bind-value="searchTerm"
-               @bind-value:event="oninput"
-               style="padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-width: 200px;" />
-        <select @bind="selectedCategory" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+        placeholder="Search tasks..."
+        @bind-value="searchTerm"
+        @bind-value:event="oninput"
+        class="search-input" />
+        <select @bind="selectedCategory" class="filter-select">
             <option value="">All Categories</option>
             @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
             {
                 <option value="@category">@category</option>
             }
         </select>
-        <button @onclick="AddNewTask" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            <span style="margin-right: 5px;">+</span> New Task
+        <select @bind="selectedStatus" class="filter-select">
+            <option value="">All Statuses</option>
+            <option value="Not Started">Not Started</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+        </select>
+        <select @bind="sortOption" class="filter-select">
+            <option value="title">Sort by Title</option>
+            <option value="category">Sort by Category</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+        </select>
+        <button @onclick="AddNewTask" class="add-button">
+            <span class="plus-icon">+</span> New Task
         </button>
     </div>
 </div>
 
-<div class="columns-container" style="display: flex; gap: 20px;">
-    <!-- Not Started -->
-    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>Not Started</h2>
+
+<div class="progress-container">
+    <div class="progress-header">
+        <span>Overall Progress</span>
+        <span>@progressPercentage%</span>
+    </div>
+    <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: @progressPercentage%;">
+        </div>
+    </div>
+</div>
+
+<div class="columns-container">
+    <!-- Not Started Column -->
+    <div class="column"
+         ondragover="event.preventDefault();"
+         @ondrop="@(() => HandleDrop("Not Started"))"
+    @ondragover:preventDefault>
+        <h2 class="column-header">
+            Not Started
+            <span class="count-badge">
+                @FilteredTasks().Count(t => t.Status == "Not Started")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "Not Started"))
         {
-            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div class="task-card"
+                 draggable="true"
+                 @ondragstart="@(() => HandleDragStart(task))"
+                 @key="task.Id">
+                <div class="task-header">
                     <h3>@task.Title</h3>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
-                            @task.Category
-                        </span>
-                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                            ✏️
-                        </button>
+                    <div class="task-actions">
+                        <span class="category-badge">@task.Category</span>
+                        <button @onclick="() => EditTask(task)" class="edit-button">✏️</button>
                     </div>
                 </div>
-                <p>@task.Description</p>
-                <div style="margin-bottom: 8px;">
+                <p class="task-description">@task.Description</p>
+                <div class="task-tags">
                     @if (task.PartsNeeded)
                     {
-                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
-                            Parts Needed
-                        </span>
+                        <span class="tag parts-needed">Parts Needed</span>
                     }
                     @if (task.PartsAcquired)
                     {
-                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
-                            Parts Acquired
-                        </span>
+                        <span class="tag parts-acquired">Parts Acquired</span>
                     }
                 </div>
-                <button @onclick="@(() => MoveToStatus(task, "In Progress"))">Start Task</button>
+                <button @onclick="@(() => RequestMoveToStatus(task, "In Progress"))" class="action-button">
+                    Start Task
+                </button>
             </div>
         }
     </div>
 
-    <!-- In Progress -->
-    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>In Progress</h2>
+    <!-- In Progress Column -->
+    <div class="column"
+         ondragover="event.preventDefault();"
+         @ondrop="@(() => HandleDrop("In Progress"))"
+    @ondragover:preventDefault>
+        <h2 class="column-header">
+            In Progress
+            <span class="count-badge">
+                @FilteredTasks().Count(t => t.Status == "In Progress")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "In Progress"))
         {
-            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div class="task-card"
+                 draggable="true"
+                 @ondragstart="@(() => HandleDragStart(task))"
+                 @key="task.Id">
+                <div class="task-header">
                     <h3>@task.Title</h3>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
-                            @task.Category
-                        </span>
-                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                            ✏️
-                        </button>
+                    <div class="task-actions">
+                        <span class="category-badge">@task.Category</span>
+                        <button @onclick="() => EditTask(task)" class="edit-button">✏️</button>
                     </div>
                 </div>
-                <p>@task.Description</p>
-                <div style="margin-bottom: 8px;">
+                <p class="task-description">@task.Description</p>
+                <div class="task-tags">
                     @if (task.PartsNeeded)
                     {
-                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
-                            Parts Needed
-                        </span>
+                        <span class="tag parts-needed">Parts Needed</span>
                     }
                     @if (task.PartsAcquired)
                     {
-                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
-                            Parts Acquired
-                        </span>
+                        <span class="tag parts-acquired">Parts Acquired</span>
                     }
                 </div>
-                <button @onclick="@(() => MoveToStatus(task, "Done"))">Complete Task</button>
+                <button @onclick="@(() => RequestMoveToStatus(task, "Done"))" class="action-button">
+                    Complete Task
+                </button>
             </div>
         }
     </div>
 
-    <!-- Done -->
-    <div class="column" style="flex: 1; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-        <h2>Done</h2>
+    <!-- Done Column -->
+    <div class="column"
+         ondragover="event.preventDefault();"
+         @ondrop="@(() => HandleDrop("Done"))"
+    @ondragover:preventDefault>
+        <h2 class="column-header">
+            Done
+            <span class="count-badge">
+                @FilteredTasks().Count(t => t.Status == "Done")
+            </span>
+        </h2>
         @foreach (var task in FilteredTasks().Where(t => t.Status == "Done"))
         {
-            <div class="task-card" style="background-color: white; padding: 10px; margin: 5px 0; border-radius: 3px;">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div class="task-card"
+                 draggable="true"
+                 @ondragstart="@(() => HandleDragStart(task))"
+                 @key="task.Id">
+                <div class="task-header">
                     <h3>@task.Title</h3>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 0.8em; color: #666; background-color: #eee; padding: 2px 6px; border-radius: 3px;">
-                            @task.Category
-                        </span>
-                        <button @onclick="() => EditTask(task)" style="background: none; border: none; color: #666; cursor: pointer;">
-                            ✏️
-                        </button>
+                    <div class="task-actions">
+                        <span class="category-badge">@task.Category</span>
+                        <button @onclick="() => EditTask(task)" class="edit-button">✏️</button>
                     </div>
                 </div>
-                <p>@task.Description</p>
-                <div style="margin-bottom: 8px;">
+                <p class="task-description">@task.Description</p>
+                <div class="task-tags">
                     @if (task.PartsNeeded)
                     {
-                        <span style="background-color: #ffd700; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-right: 5px;">
-                            Parts Needed
-                        </span>
+                        <span class="tag parts-needed">Parts Needed</span>
                     }
                     @if (task.PartsAcquired)
                     {
-                        <span style="background-color: #90EE90; padding: 2px 6px; border-radius: 3px; font-size: 0.8em;">
-                            Parts Acquired
-                        </span>
+                        <span class="tag parts-acquired">Parts Acquired</span>
                     }
+                </div>
+                <div class="task-actions">
+                    <button @onclick="@(() => RequestMoveToStatus(task, "In Progress"))" class="action-button">
+                        Reopen
+                    </button>
+                    <button @onclick="@(() => ArchiveTask(task))" class="archive-button">
+                        📦 Archive
+                    </button>
                 </div>
             </div>
         }
@@ -142,101 +508,173 @@
 <!-- Add New Task Dialog -->
 @if (showAddDialog)
 {
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h3>Add New Task</h3>
-        <div>
-            <label>Title:</label>
-            <input @bind="newTask.Title" />
-        </div>
-        <div style="margin-top: 10px;">
-            <label>Description:</label>
-            <input @bind="newTask.Description" />
-        </div>
-        <div style="margin-top: 10px;">
-            <label>Status:</label>
-            <select @bind="newTask.Status">
-                @foreach (var status in StatusValidationAttribute.GetAllowedStatuses())
-                {
-                    <option value="@status">@status</option>
-                }
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>Category:</label>
-            <select @bind="newTask.Category">
-                @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
-                {
-                    <option value="@category">@category</option>
-                }
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>
-                <input type="checkbox" @bind="newTask.PartsNeeded" />
-                Parts Needed
-            </label>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>
-                <input type="checkbox" @bind="newTask.PartsAcquired" />
-                Parts Acquired
-            </label>
-        </div>
-        <div style="margin-top: 10px;">
-            <button @onclick="SaveNewTask">Save</button>
-            <button @onclick="CancelAdd">Cancel</button>
+    <div class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <h3 class="modal-title">Add New Task</h3>
+
+                <EditForm Model="newTask" OnValidSubmit="SaveNewTask">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <InputText id="title" @bind-Value="newTask.Title" class="form-control" />
+                        <ValidationMessage For="@(() => newTask.Title)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <InputTextArea id="description" @bind-Value="newTask.Description" class="form-control" rows="3" />
+                        <ValidationMessage For="@(() => newTask.Description)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <InputSelect id="status" @bind-Value="newTask.Status" class="form-control">
+                            <option value="Not Started">Not Started</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Done">Done</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => newTask.Status)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <InputSelect id="category" @bind-Value="newTask.Category" class="form-control">
+                            @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => newTask.Category)" class="validation-message" />
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="partsNeeded" @bind-Value="newTask.PartsNeeded" class="form-check-input" />
+                        <label for="partsNeeded" class="form-check-label">Parts Needed</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="partsAcquired" @bind-Value="newTask.PartsAcquired" class="form-check-input" />
+                        <label for="partsAcquired" class="form-check-label">Parts Acquired</label>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="primary-button">Save</button>
+                        <button type="button" @onclick="CancelAdd" class="secondary-button">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
         </div>
     </div>
 }
 
-<!-- Edit Dialog -->
+<!-- Edit Task Dialog -->
 @if (showEditDialog)
 {
-    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h3>Edit Task</h3>
-        <div>
-            <label>Title:</label>
-            <input @bind="editingTask.Title" />
+    <div class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <h3 class="modal-title">Edit Task</h3>
+
+                <EditForm Model="editingTask" OnValidSubmit="SaveEdit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="edit-title">Title:</label>
+                        <InputText id="edit-title" @bind-Value="editingTask.Title" class="form-control" />
+                        <ValidationMessage For="@(() => editingTask.Title)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-description">Description:</label>
+                        <InputTextArea id="edit-description" @bind-Value="editingTask.Description" class="form-control" rows="3" />
+                        <ValidationMessage For="@(() => editingTask.Description)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-status">Status:</label>
+                        <InputSelect id="edit-status" @bind-Value="editingTask.Status" class="form-control">
+                            <option value="Not Started">Not Started</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Done">Done</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => editingTask.Status)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-category">Category:</label>
+                        <InputSelect id="edit-category" @bind-Value="editingTask.Category" class="form-control">
+                            @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => editingTask.Category)" class="validation-message" />
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="edit-partsNeeded" @bind-Value="editingTask.PartsNeeded" class="form-check-input" />
+                        <label for="edit-partsNeeded" class="form-check-label">Parts Needed</label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="edit-partsAcquired" @bind-Value="editingTask.PartsAcquired" class="form-check-input" />
+                        <label for="edit-partsAcquired" class="form-check-label">Parts Acquired</label>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="primary-button">Save</button>
+                        <button type="button" @onclick="CancelEdit" class="secondary-button">Cancel</button>
+                        <button type="button" @onclick="ConfirmDelete" class="danger-button">Delete</button>
+                    </div>
+                </EditForm>
+            </div>
         </div>
-        <div style="margin-top: 10px;">
-            <label>Description:</label>
-            <input @bind="editingTask.Description" />
+    </div>
+}
+
+<!-- Confirm Delete Dialog -->
+@if (showDeleteConfirm)
+{
+    <div class="modal-backdrop">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Confirm Deletion</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete "@editingTask.Title"?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button @onclick="DeleteTask" class="danger-button">Delete</button>
+                    <button @onclick="CancelDelete" class="secondary-button">Cancel</button>
+                </div>
+            </div>
         </div>
-        <div style="margin-top: 10px;">
-            <label>Status:</label>
-            <select @bind="editingTask.Status">
-                @foreach (var status in StatusValidationAttribute.GetAllowedStatuses())
-                {
-                    <option value="@status">@status</option>
-                }
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>Category:</label>
-            <select @bind="editingTask.Category">
-                @foreach (var category in CategoryValidationAttribute.GetAllowedCategories())
-                {
-                    <option value="@category">@category</option>
-                }
-            </select>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>
-                <input type="checkbox" @bind="editingTask.PartsNeeded" />
-                Parts Needed
-            </label>
-        </div>
-        <div style="margin-top: 10px;">
-            <label>
-                <input type="checkbox" @bind="editingTask.PartsAcquired" />
-                Parts Acquired
-            </label>
-        </div>
-        <div style="margin-top: 10px;">
-            <button @onclick="SaveEdit">Save</button>
-            <button @onclick="CancelEdit">Cancel</button>
+    </div>
+}
+
+<!-- Confirm Status Change Dialog -->
+@if (showConfirmDialog)
+{
+    <div class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Confirm Status Change</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to move "@taskToConfirm.Title" to @newStatusToConfirm?</p>
+                </div>
+                <div class="modal-footer">
+                    <button @onclick="ConfirmStatusChange" class="primary-button">Yes, Move It</button>
+                    <button @onclick="CancelStatusChange" class="secondary-button">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 }
@@ -245,17 +683,32 @@
     private List<BuildTasks> tasks = new();
     private bool showAddDialog = false;
     private bool showEditDialog = false;
+    private bool showDeleteConfirm = false;
+    private bool showConfirmDialog = false;
     private BuildTasks newTask = new();
     private BuildTasks editingTask = new();
+    private BuildTasks? draggedTask;
+    private BuildTasks taskToConfirm = new();
+    private string newStatusToConfirm = "";
     private string selectedCategory = "";
+    private string selectedStatus = "";
     private string searchTerm = "";
+    private string sortOption = "title";
+    private int progressPercentage => tasks.Count > 0
+        ? (int)((float)tasks.Count(t => t.Status == "Done") / tasks.Count * 100)
+        : 0;
 
-    protected override async Task OnInitializedAsync()
+    private async Task LoadTasks()
     {
         using var context = await DbFactory.CreateDbContextAsync();
-        tasks = await context.BuildTasks.ToListAsync();
+        tasks = await context.BuildTasks
+            .Where(t => !t.IsArchived)  // Only get non-archived tasks
+            .ToListAsync();
     }
-
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasks();
+    }
     private IEnumerable<BuildTasks> FilteredTasks()
     {
         var filtered = tasks.AsEnumerable();
@@ -265,6 +718,11 @@
             filtered = filtered.Where(t => t.Category == selectedCategory);
         }
 
+        if (!string.IsNullOrEmpty(selectedStatus))
+        {
+            filtered = filtered.Where(t => t.Status == selectedStatus);
+        }
+
         if (!string.IsNullOrEmpty(searchTerm))
         {
             filtered = filtered.Where(t =>
@@ -272,22 +730,76 @@
                 t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
+        // Add sorting
+        filtered = sortOption switch
+        {
+            "title" => filtered.OrderBy(t => t.Title),
+            "category" => filtered.OrderBy(t => t.Category),
+            "newest" => filtered.OrderByDescending(t => t.Id),
+            "oldest" => filtered.OrderBy(t => t.Id),
+            _ => filtered
+        };
+
         return filtered;
+    }
+
+    private void RequestMoveToStatus(BuildTasks task, string newStatus)
+    {
+        taskToConfirm = task;
+        newStatusToConfirm = newStatus;
+        showConfirmDialog = true;
+    }
+
+    private async Task ConfirmStatusChange()
+    {
+        await MoveToStatus(taskToConfirm, newStatusToConfirm);
+        showConfirmDialog = false;
+    }
+
+    private void CancelStatusChange()
+    {
+        showConfirmDialog = false;
     }
 
     private async Task MoveToStatus(BuildTasks task, string newStatus)
     {
         using var context = await DbFactory.CreateDbContextAsync();
-        task.Status = newStatus;
-        context.BuildTasks.Update(task);
-        await context.SaveChangesAsync();
+        var dbTask = await context.BuildTasks.FindAsync(task.Id);
+
+        if (dbTask != null)
+        {
+            dbTask.Status = newStatus;
+            await context.SaveChangesAsync();
+
+            // Update local task
+            var localTask = tasks.FirstOrDefault(t => t.Id == task.Id);
+            if (localTask != null)
+            {
+                localTask.Status = newStatus;
+            }
+        }
+
         StateHasChanged();
+    }
+
+    private void HandleDragStart(BuildTasks task)
+    {
+        draggedTask = task;
+    }
+
+    private async Task HandleDrop(string newStatus)
+    {
+        if (draggedTask != null && draggedTask.Status != newStatus)
+        {
+            await MoveToStatus(draggedTask, newStatus);
+            draggedTask = null;
+        }
     }
 
     private void AddNewTask()
     {
         showAddDialog = true;
-        newTask = new BuildTasks { Status = "Not Started", Category = "Other" };
+        newTask = new BuildTasks { Status = "Not Started" };
     }
 
     private async Task SaveNewTask()
@@ -362,5 +874,45 @@
     {
         showEditDialog = false;
         editingTask = new BuildTasks();
+    }
+
+    private void ConfirmDelete()
+    {
+        showDeleteConfirm = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirm = false;
+    }
+
+    private async Task DeleteTask()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        var task = await context.BuildTasks.FindAsync(editingTask.Id);
+        if (task != null)
+        {
+            context.BuildTasks.Remove(task);
+            await context.SaveChangesAsync();
+
+            tasks.RemoveAll(t => t.Id == editingTask.Id);
+        }
+
+        showDeleteConfirm = false;
+        showEditDialog = false;
+
+    }
+
+    private async Task ArchiveTask(BuildTasks buildTasks)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        var dbTask = await context.BuildTasks.FindAsync(buildTasks.Id);
+        if (dbTask != null)
+        {
+            dbTask.IsArchived = true;
+            dbTask.ArchivedDate = DateTime.Now;
+            await context.SaveChangesAsync();
+            await LoadTasks();
+        }
     }
 }

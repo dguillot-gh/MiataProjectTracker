@@ -7,140 +7,313 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 
-<div class="p-8 bg-gray-100 min-h-screen">
-    <div class="max-w-6xl mx-auto">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total New Value</h3>
-                <p class="text-2xl font-bold text-gray-900">$@totalNewPrice.ToString("N2")</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total Paid</h3>
-                <p class="text-2xl font-bold text-gray-900">$@totalPaidPrice.ToString("N2")</p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-green-100">
-                <h3 class="text-sm font-medium text-gray-500 mb-1">Total Savings</h3>
-                <p class="text-2xl font-bold text-green-600">$@totalSavings.ToString("N2")</p>
-                <span class="text-sm text-green-600">@averageSavingsPercentage.ToString("N0")% Average Savings</span>
-            </div>
-        </div>
+<div class="page-container">
+    <div class="page-header">
+        <h1>Price Tracker</h1>
+    </div>
 
-        <!-- Header Section -->
-        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Parts List</h1>
-                    <p class="text-sm text-gray-500 mt-1">Track your parts and savings</p>
-                </div>
-                <button @onclick="AddNewEntry"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    Add Part
-                </button>
-            </div>
+    <div class="stats-container">
+        <div class="stats-card">
+            <h3>Total New Value</h3>
+            <p>$@totalNewPrice.ToString("N2")</p>
         </div>
+        <div class="stats-card">
+            <h3>Total Paid</h3>
+            <p>$@totalPaidPrice.ToString("N2")</p>
+        </div>
+        <div class="stats-card">
+            <h3>Total Savings</h3>
+            <p class="savings-text">$@totalSavings.ToString("N2")</p>
+            <span class="savings-percent">@averageSavingsPercentage.ToString("N0")% Average Savings</span>
+        </div>
+    </div>
 
-        <!-- Table Section -->
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
+    <div class="control-panel">
+        <div class="search-sort">
+            <input type="text"
+                   placeholder="Search parts..."
+                   @bind-value="searchTerm"
+                   @bind-value:event="oninput"
+                   class="form-control" />
+            <select @bind="sortOption" class="form-select">
+                <option value="name">Sort by Name</option>
+                <option value="savings">Sort by Savings</option>
+                <option value="price">Sort by Price</option>
+                <option value="source">Sort by Source</option>
+            </select>
+            <button @onclick="AddNewEntry" class="btn btn-primary">Add Part</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Loading parts...</p>
+        </div>
+    }
+    else if (!FilteredComparisons().Any())
+    {
+        <div class="empty-state">
+            <h3>No parts found</h3>
+            <p>@(string.IsNullOrEmpty(searchTerm) ? "Start by adding your first part" : "Try adjusting your search")</p>
+            @if (string.IsNullOrEmpty(searchTerm))
+            {
+                <button @onclick="AddNewEntry" class="btn btn-primary">Add Your First Part</button>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-container">
+            <table class="data-table">
                 <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Part Name</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">New Price</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Paid Price</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Savings</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <tr>
+                        <th>Part Name</th>
+                        <th>New Price</th>
+                        <th>Paid Price</th>
+                        <th>Savings</th>
+                        <th>Source</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach (var item in comparisons)
+                <tbody>
+                    @foreach (var item in FilteredComparisons())
                     {
-                        <tr class="hover:bg-gray-50 transition-colors duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">@item.PartName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">$@item.NewPrice.ToString("N2")</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">$@item.ActualPaidPrice.ToString("N2")</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-green-600 font-medium">$@item.Savings.ToString("N2")</span>
-                                <span class="text-green-500 text-sm ml-1">(@item.SavingsPercentage.ToString("N0")%)</span>
+                        <tr>
+                            <td>@item.PartName</td>
+                            <td>$@item.NewPrice.ToString("N2")</td>
+                            <td>$@item.ActualPaidPrice.ToString("N2")</td>
+                            <td>
+                                <span class="savings-amount">$@item.Savings.ToString("N2")</span>
+                                <span class="savings-percent">(@item.SavingsPercentage.ToString("N0")%)</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-gray-500">@item.Source</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <button @onclick="() => DeleteEntry(item)"
-                                        class="text-red-600 hover:text-red-800 font-medium transition-colors duration-150">
-                                    Delete
-                                </button>
+                            <td>@item.Source</td>
+                            <td>
+                                <button @onclick="() => DeleteEntry(item)" class="btn btn-danger">Delete</button>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-    </div>
+    }
 
     @if (showDialog)
     {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
-            <div class="bg-white rounded-xl shadow-lg p-6 w-96 max-w-[90vw]">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Add New Part</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Part Name</label>
-                        <input @bind="newItem.PartName"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">New Price ($)</label>
-                        <input type="number" step="0.01" @bind="newItem.NewPrice"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Actual Paid Price ($)</label>
-                        <input type="number" step="0.01" @bind="newItem.ActualPaidPrice"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
-                        <input @bind="newItem.Source"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                        <textarea @bind="newItem.Notes" rows="3"
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"></textarea>
-                    </div>
+        <div class="modal-backdrop">
+            <div class="modal-content">
+                <h2>Add New Part</h2>
+                <div class="form-group">
+                    <label>Part Name</label>
+                    <input @bind="newItem.PartName" class="form-control" />
                 </div>
-                <div class="mt-6 flex justify-end gap-3">
-                    <button @onclick="CloseDialog"
-                            class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200">
-                        Cancel
-                    </button>
-                    <button @onclick="SaveEntry"
-                            class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 shadow-sm hover:shadow">
-                        Save
-                    </button>
+                <div class="form-group">
+                    <label>New Price ($)</label>
+                    <input type="number" step="0.01" @bind="newItem.NewPrice" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Actual Paid Price ($)</label>
+                    <input type="number" step="0.01" @bind="newItem.ActualPaidPrice" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Source</label>
+                    <input @bind="newItem.Source" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea @bind="newItem.Notes" rows="3" class="form-control"></textarea>
+                </div>
+                <div class="button-group">
+                    <button @onclick="CloseDialog" class="btn btn-secondary">Cancel</button>
+                    <button @onclick="SaveEntry" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showDeleteConfirmation)
+    {
+        <div class="modal-backdrop">
+            <div class="modal-content">
+                <h3>Confirm Delete</h3>
+                <p>Are you sure you want to delete this part? This action cannot be undone.</p>
+                <div class="button-group">
+                    <button @onclick="CancelDelete" class="btn btn-secondary">Cancel</button>
+                    <button @onclick="ConfirmDelete" class="btn btn-danger">Delete</button>
                 </div>
             </div>
         </div>
     }
 </div>
 
-@code {
-    // ... existing code remains the same ...
-}
+<style>
+    .page-container {
+        padding: 2rem;
+    }
 
-@code {
-    // ... existing code remains the same ...
-}
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .stats-card h3 {
+            color: #4a5568;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-card p {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+    .savings-text {
+        color: #059669 !important;
+    }
+
+    .savings-percent {
+        color: #059669;
+        font-size: 0.875rem;
+    }
+
+    .control-panel {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .search-sort {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+
 
 @code {
     private MiataProjectTrackerContext context = default!;
     private List<PriceComparison> comparisons = new();
     private bool showDialog = false;
+    private bool showDeleteConfirmation = false;
+    private bool isLoading = true;
     private PriceComparison newItem = new();
+    private PriceComparison itemToDelete = null;
+    private string searchTerm = "";
+    private string sortOption = "name";
 
     private decimal totalNewPrice => comparisons.Sum(x => x.NewPrice);
     private decimal totalPaidPrice => comparisons.Sum(x => x.ActualPaidPrice);
@@ -153,6 +326,30 @@
     {
         context = await DbFactory.CreateDbContextAsync();
         await LoadComparisons();
+        isLoading = false;
+    }
+
+    private IEnumerable<PriceComparison> FilteredComparisons()
+    {
+        var filtered = comparisons.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            filtered = filtered.Where(x =>
+                x.PartName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                x.Source.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filtered = sortOption switch
+        {
+            "name" => filtered.OrderBy(x => x.PartName),
+            "savings" => filtered.OrderByDescending(x => x.Savings),
+            "price" => filtered.OrderByDescending(x => x.NewPrice),
+            "source" => filtered.OrderBy(x => x.Source),
+            _ => filtered
+        };
+
+        return filtered;
     }
 
     private async Task LoadComparisons()
@@ -183,11 +380,28 @@
         newItem = new();
     }
 
-    private async Task DeleteEntry(PriceComparison item)
+    private void DeleteEntry(PriceComparison item)
     {
-        context.PriceComparison.Remove(item);
-        await context.SaveChangesAsync();
-        await LoadComparisons();
+        itemToDelete = item;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+        itemToDelete = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (itemToDelete != null)
+        {
+            context.PriceComparison.Remove(itemToDelete);
+            await context.SaveChangesAsync();
+            await LoadComparisons();
+        }
+        showDeleteConfirmation = false;
+        itemToDelete = null;
     }
 
     public async ValueTask DisposeAsync()

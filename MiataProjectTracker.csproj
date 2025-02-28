@@ -4,16 +4,21 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>c0d0ea47-7c1f-443b-bcda-5a3802e9e052</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db" />
     <None Remove="MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db-shm" />
     <None Remove="MiataProjectTrackerContext-83db06b7-40c2-4976-bfd2-d07a0b6cc556.db-wal" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="MiataProjectTracker.sln" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid" Version="9.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="9.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
@@ -23,6 +28,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>
