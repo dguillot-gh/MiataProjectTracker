@@ -107,26 +107,29 @@
         padding: 2rem;
         max-width: 1200px;
         margin: 0 auto;
+        background-color: #1a202c;
+        color: #e2e8f0;
+        min-height: 100vh;
     }
 
     .page-header {
         text-align: center;
         margin-bottom: 2rem;
         padding: 1.5rem;
-        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        background: linear-gradient(to right, #2d3748, #1a202c);
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
         .page-header h1 {
             margin: 0;
-            color: #2d3748;
+            color: #e2e8f0;
             font-size: 2rem;
             font-weight: bold;
         }
 
     .subtitle {
-        color: #4a5568;
+        color: #a0aec0;
         margin-top: 0.5rem;
         font-size: 1.1rem;
     }
@@ -143,14 +146,14 @@
     }
 
     .stats-card {
-        background: white;
+        background: #2d3748;
         padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
         .stats-card h3 {
-            color: #4a5568;
+            color: #a0aec0;
             font-size: 0.875rem;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
@@ -158,22 +161,22 @@
         }
 
     .stats-value {
-        color: #2d3748;
+        color: #e2e8f0;
         font-size: 1.5rem;
         font-weight: bold;
         margin: 0;
     }
 
     .summary-card {
-        background: white;
+        background: #2d3748;
         padding: 2rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         margin-bottom: 2rem;
     }
 
         .summary-card h2 {
-            color: #2d3748;
+            color: #e2e8f0;
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
@@ -186,7 +189,7 @@
     }
 
     .summary-section h3 {
-        color: #4a5568;
+        color: #a0aec0;
         font-size: 1rem;
         font-weight: 500;
         margin-bottom: 1rem;
@@ -205,24 +208,24 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.5rem 0;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #4a5568;
     }
 
     .detail-label {
-        color: #4a5568;
+        color: #a0aec0;
         font-weight: 500;
     }
 
     .detail-value {
-        color: #2d3748;
+        color: #e2e8f0;
         font-weight: 600;
     }
 
     .recent-activities-card {
-        background: white;
+        background: #2d3748;
         padding: 2rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         margin-bottom: 2rem;
     }
 
@@ -237,7 +240,7 @@
         align-items: center;
         gap: 1rem;
         padding: 1rem;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid #4a5568;
         text-align: left;
     }
 
@@ -252,13 +255,13 @@
     }
 
         .activity-icon.part {
-            background-color: #ebf8ff;
-            color: #3182ce;
+            background-color: #2c5282;
+            color: #90cdf4;
         }
 
         .activity-icon.build {
-            background-color: #f0fff4;
-            color: #38a169;
+            background-color: #276749;
+            color: #9ae6b4;
         }
 
     .activity-content {
@@ -267,19 +270,19 @@
 
     .activity-title {
         margin: 0;
-        color: #2d3748;
+        color: #e2e8f0;
         font-weight: 500;
     }
 
     .activity-date {
         margin: 0;
-        color: #718096;
+        color: #a0aec0;
         font-size: 0.875rem;
     }
 
     .no-activities {
         text-align: center;
-        color: #718096;
+        color: #a0aec0;
         padding: 2rem;
     }
 
@@ -291,10 +294,10 @@
     }
 
     .nav-card {
-        background: white;
+        background: #2d3748;
         padding: 1.5rem;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         text-decoration: none;
         transition: all 0.2s ease;
         text-align: center;
@@ -302,18 +305,19 @@
 
         .nav-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            background: #364154;
         }
 
         .nav-card h2 {
-            color: #2d3748;
+            color: #e2e8f0;
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
 
         .nav-card p {
-            color: #4a5568;
+            color: #a0aec0;
             font-size: 0.875rem;
             margin: 0;
         }
@@ -333,6 +337,9 @@
     }
 </style>
 
+@code {
+    // ... existing code remains the same ...
+}
 @code {
     private int totalParts;
     private int totalBuildLogs;
