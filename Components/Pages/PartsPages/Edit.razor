@@ -4,53 +4,154 @@
 @inject IDbContextFactory<MiataProjectTracker.Data.MiataProjectTrackerContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Edit</PageTitle>
+<PageTitle>Edit Part</PageTitle>
 
-<h1>Edit</h1>
+<div class="page-header">
+    <h1>Edit Part</h1>
+</div>
 
-<h2>Parts</h2>
-<hr />
 @if (Parts is null)
 {
-    <p><em>Loading...</em></p>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Loading part details...</p>
+    </div>
 }
 else
 {
-    <div class="row">
-        <div class="col-md-4">
+    <div class="edit-container">
+        <div class="edit-form-container">
             <EditForm method="post" Model="Parts" OnValidSubmit="UpdateParts" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
+                <ValidationSummary role="alert" class="alert alert-danger" />
                 <input type="hidden" name="Parts.Id" value="@Parts.Id" />
-                <div class="mb-3">
-                    <label for="partname" class="form-label">Part Name:</label>
+
+                <div class="form-group mb-3">
+                    <label for="partname" class="form-label">Part Name</label>
                     <InputText id="partname" @bind-Value="Parts.PartName" class="form-control" />
                     <ValidationMessage For="() => Parts.PartName" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="partnumber" class="form-label">Part Number:</label>
+
+                <div class="form-group mb-3">
+                    <label for="partnumber" class="form-label">Part Number</label>
                     <InputText id="partnumber" @bind-Value="Parts.PartNumber" class="form-control" />
                     <ValidationMessage For="() => Parts.PartNumber" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="partstatus" class="form-label">Part Status:</label>
-                    <InputText id="partstatus" @bind-Value="Parts.PartStatus" class="form-control" />
+
+                <div class="form-group mb-3">
+                    <label for="partstatus" class="form-label">Status</label>
+                    <InputSelect id="partstatus" @bind-Value="Parts.PartStatus" class="form-select">
+                        <option value="">Select Status</option>
+                        <option value="Accquired">Acquired</option>
+                        <option value="Needed">Needed</option>
+                    </InputSelect>
                     <ValidationMessage For="() => Parts.PartStatus" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="partcost" class="form-label">Part Cost:</label>
-                    <InputNumber id="partcost" @bind-Value="Parts.PartCost" class="form-control" />
+
+                <div class="form-group mb-3">
+                    <label for="partcost" class="form-label">Cost</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <InputNumber id="partcost" @bind-Value="Parts.PartCost" class="form-control" />
+                    </div>
                     <ValidationMessage For="() => Parts.PartCost" class="text-danger" />
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <a href="/parts" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
             </EditForm>
         </div>
     </div>
 }
 
-<div>
-    <a href="/parts">Back to List</a>
-</div>
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: linear-gradient(to right, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+        .page-header h1 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+    .edit-container {
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .edit-form-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 600px;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #4a5568;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 0.5rem;
+        transition: border-color 0.2s;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
+        color: #4a5568;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem;
+        gap: 1rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+    }
+</style>
+
+}
 
 @code {
     [SupplyParameterFromQuery]
