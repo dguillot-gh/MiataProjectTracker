@@ -5,6 +5,11 @@ VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiataProjectTracker", "MiataProjectTracker.csproj", "{BC4D6C14-393B-4554-AA6B-BE0DD61B36CD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiataProjectTracker.Mobile", "..\MiataProjectTracker.Mobile\MiataProjectTracker.Mobile.csproj", "{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BC4D6C14-393B-4554-AA6B-BE0DD61B36CD} = {BC4D6C14-393B-4554-AA6B-BE0DD61B36CD}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,8 +20,16 @@ Global
 		{BC4D6C14-393B-4554-AA6B-BE0DD61B36CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC4D6C14-393B-4554-AA6B-BE0DD61B36CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC4D6C14-393B-4554-AA6B-BE0DD61B36CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80705285-BE5F-454D-B53C-2DEFEE3E6DC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD06B322-24C4-47AE-8B74-266FF55BC334}
 	EndGlobalSection
 EndGlobal
